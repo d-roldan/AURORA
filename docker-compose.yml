@@ -47,13 +47,13 @@ services:
     restart: unless-stopped
   aegis-migrate:
     build: ./apps/backend
-    image: aegis-backend:0.1.0
+    image: aegis-backend:0.1.1
     environment: *core-env
     command: [sh, -c, 'npx prisma migrate deploy && node prisma/seed.cjs']
     depends_on:
       aegis-postgres: {condition: service_healthy}
   aegis-backend:
-    image: aegis-backend:0.1.0
+    image: aegis-backend:0.1.1
     build: ./apps/backend
     environment:
       <<: *core-env
@@ -70,7 +70,7 @@ services:
       retries: 12
     restart: unless-stopped
   aegis-analytics:
-    image: aegis-analytics:0.1.0
+    image: aegis-analytics:0.1.1
     build: ./services/analytics
     environment:
       SERVICE_API_KEY: ${SERVICE_API_KEY}
@@ -81,7 +81,7 @@ services:
       retries: 15
     restart: unless-stopped
   aegis-simulator:
-    image: aegis-simulator:0.1.0
+    image: aegis-simulator:0.1.1
     build:
       context: ./services/simulator
       additional_contexts:
@@ -96,7 +96,7 @@ services:
       retries: 15
     restart: unless-stopped
   aegis-frontend:
-    image: aegis-frontend:0.1.0
+    image: aegis-frontend:0.1.1
     build: ./apps/frontend
     healthcheck:
       test: [CMD, wget, -q, --spider, http://127.0.0.1:8080/]

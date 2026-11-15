@@ -16,7 +16,7 @@ async (page)=>{
  await page.locator('.sidebar-toggle').focus();await page.keyboard.press('Enter');
  check(await sidebar.getAttribute('data-collapsed')==='true','Keyboard toggles sidebar to collapsed');
  check(await page.locator('main').evaluate(el=>el.getBoundingClientRect().left)===64,'Content uses released space in collapsed layout');
- check(await sidebar.locator('nav a').count()===7,'All navigation links remain available when collapsed');
+ check(await sidebar.locator('nav a').count()===5,'All five visible navigation links remain available when collapsed');
  check(await sidebar.locator('nav a').evaluateAll(links=>links.every(link=>!!link.getAttribute('aria-label')&&!!link.title)),'Collapsed links keep accessible names and hover labels');
  await page.reload();await page.locator('.profile').first().waitFor();
  check(await sidebar.getAttribute('data-collapsed')==='true','Collapsed preference survives reload');

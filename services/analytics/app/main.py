@@ -7,7 +7,7 @@ import numpy as np
 from fastapi import FastAPI, Header, HTTPException, Depends
 from pydantic import BaseModel, Field, field_validator
 
-app = FastAPI(title="AEGIS Internal ECG Analytics", version="0.1.0")
+app = FastAPI(title="AEGIS Internal ECG Analytics", version="0.1.1")
 
 def authorized(x_service_key: str = Header(default="")):
     if not secrets.compare_digest(x_service_key, os.environ["SERVICE_API_KEY"]):

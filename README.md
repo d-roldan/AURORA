@@ -1,6 +1,6 @@
 # AURORA — Astronaut Health Monitoring Platform
 
-V0.1.0 · Prototipo experimental local para demostración. Tripulantes ficticios, telemetría sintética explícita y procesamiento ECG real. No es un producto NASA ni un dispositivo médico validado. No proporciona diagnósticos, tratamientos ni asistencia clínica.
+V0.1.1 · Prototipo experimental local para demostración. Tripulantes ficticios, telemetría sintética explícita y procesamiento ECG real. No es un producto NASA ni un dispositivo médico validado. No proporciona diagnósticos, tratamientos ni asistencia clínica.
 
 Nombre de producto: **AURORA**. Los identificadores técnicos históricos `aegis` (servicios, volúmenes, paquetes y almacenamiento local) se conservan para mantener la instalación y sus datos. Referencia visual: `docs/Nasa_Space_Apps_26.html`.
 

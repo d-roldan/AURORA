@@ -18,7 +18,7 @@ async function main(){
  const app=await NestFactory.create(AppModule,{bodyParser:false});
  app.use(helmet({contentSecurityPolicy:false}));app.use(json({limit:'1mb'}));
  app.useGlobalPipes(new ValidationPipe({whitelist:true,forbidNonWhitelisted:true,transform:true}));app.useGlobalFilters(new Errors());
- const config=new DocumentBuilder().setTitle('AEGIS Research API').setDescription('Synthetic demonstration data. No diagnoses. Service ingestion and role-protected operations.').setVersion('0.1.0').addBearerAuth().addApiKey({type:'apiKey',in:'header',name:'x-service-key'},'serviceKey').build();
+ const config=new DocumentBuilder().setTitle('AEGIS Research API').setDescription('Synthetic demonstration data. No diagnoses. Service ingestion and role-protected operations.').setVersion('0.1.1').addBearerAuth().addApiKey({type:'apiKey',in:'header',name:'x-service-key'},'serviceKey').build();
  SwaggerModule.setup('api/docs',app,SwaggerModule.createDocument(app,config));
  await app.listen(3000,'0.0.0.0');
  if(process.env.SIMULATOR_AUTOSTART==='true'){

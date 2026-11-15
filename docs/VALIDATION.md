@@ -170,3 +170,32 @@ Límites: retratos generados de personas ficticias, no de astronautas reales; no
 - Crear la regla Windows Firewall TCP 8085 con origen `LocalSubnet` falló con `Acceso denegado`; requiere PowerShell como administrador. No se verificó acceso desde otro dispositivo.
 - Pendiente en PowerShell administrador: `New-NetFirewallRule -Name 'AEGIS-Nginx-LAN-8085' -DisplayName 'AEGIS Nginx LAN TCP 8085' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8085 -RemoteAddress LocalSubnet -Profile Any`.
 
+
+## Control de misión simplificado · 15/11/2026
+
+PDCA: cambio acotado para reducir texto repetido; Heading permite omitir contexto sin dejar elementos vacíos y Dashboard muestra únicamente el título. Build de producción con docker compose build aegis-frontend aprobado (TypeScript y Vite); persiste el aviso previo de bundle mayor a 500 kB. Se actualizó solo el frontend local y se recargó Nginx.
+
+Verificación visual mediante navegador integrado en escritorio y 390×844: título sin eyebrow, descripción ni insignia; cuatro tarjetas con datos de API y cola de eventos visibles, navegación móvil contraída y sin desbordamiento horizontal observado. La misión continúa en la barra superior y el aviso de datos simulados permanece. Playwright CLI no disponible en PATH; no se agregaron pruebas para este ajuste de presentación ni se repitieron escenarios de backend. Kaizen: concentrar el contexto de misión en la barra superior para reducir repetición.
+
+## Logo AURORA · 15/11/2026
+
+PDCA: sustituir exclusivamente la marca gráfica y agregar el favicon con el emblema recibido. SVG autocontenido con el JPEG original incrustado, viewBox y recorte circular; hash del JPEG copiado coincide con el adjunto. No se añadieron dependencias.
+
+Build `docker compose build aegis-frontend` aprobado (TypeScript y Vite); persiste aviso previo de bundle mayor a 500 kB. Actualizado únicamente frontend con `up -d --no-deps` y recarga de Nginx. Recurso de icono servido con HTTP 200 y Content-Type image/svg+xml. Navegador integrado: logo cargado (44 px), barra expandida/contraída inspeccionada y enlace rel=icon apunta al mismo emblema; comprobación DOM a 390×844 sin desbordamiento horizontal. Captura: output/playwright/aurora-logo.jpg. Siete servicios saludables. No se repitieron pruebas de telemetría para este cambio de presentación. Kaizen: compartir una sola marca local entre navegación y pestaña, conservando el original para futuras variantes. La comprobación del favicon verifica declaración y recurso; no se inspeccionó el icono en la barra nativa del navegador.
+
+## Botón de barra lateral · 15/11/2026
+
+PDCA: anclar el control al borde lateral por encima del logo sin participar del flujo. CSS comparte el ancho efectivo de barra y posición del botón; conserva 224/190 px desplegada y 64 px contraída, con espacio superior estable para marca y navegación. Build TypeScript/Vite aprobado (aviso de bundle grande existente), frontend local actualizado y Nginx recargado. Navegador integrado: centro del botón x=224 expandido y x=64 contraído, y=24, alto 34, logo y=74; sin superposición vertical. Móvil 390×844: alternancia funcional, ancho contraído 64 y sin overflow horizontal. Inspección visual confirma control completo fuera del borde, sin recorte. Sin pruebas de backend por tratarse de presentación; no se añadieron tests. Kaizen: una variable CSS determina borde y control en cada breakpoint.
+
+## Control de navegación en cabecera · 15/11/2026
+
+Corrección de ubicación solicitada: SidebarToggle se renderiza en la barra superior junto a ARES-01, fuera del aside. Se retira el espacio superior reservado al control: logo vuelve a y=25. Build TypeScript/Vite aprobado, con aviso de bundle grande previo; frontend local actualizado y Nginx recargado. Navegador integrado confirmó botón dentro de topbar y ausente del aside, alternancia de escritorio y cierre exterior móvil; 390×844 sin desbordamiento horizontal e inspección visual del botón junto a misión. La ubicación anterior sobre el borde queda reemplazada. Sin cambios de API o pruebas de backend. PDCA/Kaizen: separar el control de navegación del contenido de la barra para evitar espacio reservado y superposiciones.
+
+## Menú reducido · 15/11/2026
+
+PDCA: ocultar accesos Simulador y Sistema del listado compartido de navegación. Build TypeScript/Vite aprobado (aviso de bundle grande existente); frontend local actualizado y Nginx recargado. Navegador integrado confirmó cinco enlaces: Control de misión, Tripulación, Telemetría, Eventos y Configuración. Se ajusta expectativa del recorrido crew-navigation a cinco enlaces; ese recorrido completo no se reejecutó. Las rutas directas y permisos de API continúan existentes; ocultación visual no equivale a restricción de acceso. Kaizen: reducir menú sin modificar operaciones del backend.
+
+## Entrega V0.1.1 · 15/11/2026
+
+Compose válido. Construidas las cuatro imágenes 0.1.1 (frontend, backend, analytics y simulator); TypeScript/Vite y backend compilan. Pruebas ejecutadas: node --test de gráficos/retención/sesión: 10 aprobadas; npm test en aegis-backend:0.1.1 sin red: 10 aprobadas; pytest en aegis-analytics:0.1.1 sin red: 5 aprobadas, 16 advertencias de deprecación. Persisten advertencias de bundle grande. Sin nuevas migraciones. El recorrido E2E crew-navigation completo no se reejecutó. Notas consolidadas en releases/V0.1.1.md. Publicación en main y release autorizadas expresamente por el usuario; no se despliega un sitio público ni se publican imágenes Docker.
+

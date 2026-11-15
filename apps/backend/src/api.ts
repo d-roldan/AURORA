@@ -23,7 +23,7 @@ export class SimulatorControl {
  }
  async stop(actor:string){const result=await this.call('stop',{});await this.db.simulationRun.updateMany({where:{status:'RUNNING'},data:{status:'STOPPED',stoppedAt:new Date()}});await this.db.auditLog.create({data:{actorId:actor,action:'SIMULATION_STOPPED',entityType:'SimulationRun',entityId:'active',metadata:{}}});return result;}
 }
-@ApiTags('AEGIS V0.1.0') @ApiBearerAuth() @Controller('api/v1')
+@ApiTags('AEGIS V0.1.1') @ApiBearerAuth() @Controller('api/v1')
 export class Api {
  private loginAttempts=new Map<string,{at:number;count:number}>();
  constructor(private db:Database,private telemetry:Telemetry,private sim:SimulatorControl,private operational:OperationalAlerts){}
@@ -91,10 +91,10 @@ export class Api {
  @Post('simulator/start') @Access('ADMIN') start(@Body() b:ScenarioDto,@Req() req:any){return this.sim.start(b,req.user.sub);}
  @Post('simulator/stop') @Access('ADMIN') stop(@Req() req:any){return this.sim.stop(req.user.sub);}
  @Get('audit') @Access('ADMIN') logs(){return this.db.auditLog.findMany({orderBy:{createdAt:'desc'},take:100});}
- @Get('system/live') @Access('PUBLIC') live(){return {status:'UP',version:'0.1.0'};}
+ @Get('system/live') @Access('PUBLIC') live(){return {status:'UP',version:'0.1.1'};}
  @Get('system/health') @Access(...readRoles) async health(){
   const checks=await Promise.allSettled([this.db.$queryRaw`SELECT 1`,this.telemetry.rows('buckets() |> limit(n:1)'),fetch(`${process.env.ANALYTICS_URL}/health`,{signal:AbortSignal.timeout(3000)}).then(r=>{if(!r.ok)throw new Error();return r.json();}),this.sim.call('status')]);
-  const names=['postgres','influxdb','analytics','simulator'];return {status:checks.every(r=>r.status==='fulfilled')?'UP':'DEGRADED',version:'0.1.0',checkedAt:new Date().toISOString(),services:Object.fromEntries(checks.map((r,i)=>[names[i],r.status==='fulfilled'?'UP':'DOWN']))};
+  const names=['postgres','influxdb','analytics','simulator'];return {status:checks.every(r=>r.status==='fulfilled')?'UP':'DEGRADED',version:'0.1.1',checkedAt:new Date().toISOString(),services:Object.fromEntries(checks.map((r,i)=>[names[i],r.status==='fulfilled'?'UP':'DOWN']))};
  }
  private audit(req:any,action:string,entityType:string,entityId:string){return this.db.auditLog.create({data:{actorId:req.user.sub,action,entityType,entityId,metadata:{}}});}
 }
