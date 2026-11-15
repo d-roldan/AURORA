@@ -1,0 +1,52 @@
+async page=>{
+ const checks=[];const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
+ await page.setViewportSize({width:1440,height:1000});
+ await page.goto('http://localhost:8085/crew/20cd85e5-cb29-4f46-8fb1-e2c0fac227da');
+ await page.getByRole('heading',{name:'Welcome back, Lucas Orozco'}).waitFor();
+ const nav=page.getByRole('navigation',{name:'Personal workspace navigation'});
+ await page.waitForFunction(()=>Number(document.querySelector('.personal-trend [role="img"]')?.getAttribute('aria-label')?.match(/([\d,]+) persisted/)?.[1]?.replaceAll(',',''))>2);
+ await page.locator('.personal-trend').screenshot({path:'output/playwright/linear-sleep.png'});
+ check(true,'Sleep trend has multiple persisted observations in its seven-day window');
+ await nav.getByRole('button',{name:'Body & indicators',exact:true}).click();
+ await page.getByRole('button',{name:'Bone',exact:true}).click();
+ await page.locator('.personal-trend-picker select').selectOption('bone_density');
+ await page.locator('.personal-trend').getByRole('heading',{name:'Bone mineral density'}).waitFor();
+ const auth=await page.request.post('http://localhost:8085/api/v1/auth/demo');const session=await auth.json();
+ const end=new Date(),start=new Date(end.getTime()-90*86400000);
+ const response=await page.request.get(`http://localhost:8085/api/v1/telemetry/history?subjectId=20cd85e5-cb29-4f46-8fb1-e2c0fac227da&metric=bone_density&from=${start.toISOString()}&to=${end.toISOString()}`,{headers:{Authorization:`Bearer ${session.token}`}});
+ const points=await response.json();
+ check(points.length>=3,'Monthly bone trend has at least three stored observations');
+ check(points.some(p=>p.algorithmVersion==='aurora-periodic-history-v1'),'Historical demonstration readings have explicit model provenance');
+ const caption=await page.locator('.personal-trend .personal-kicker').textContent();
+ check(caption.includes('90'),'Monthly query uses ninety days rather than an empty seven-day plot');
+ const card=await page.locator('.personal-domain-metrics [data-metric="bone_density"] strong').textContent();
+ check(Math.abs(parseFloat(card)-points.at(-1).value)<=.0051,'Last monthly graph value matches the visible metric card');
+ await page.locator('.personal-trend').screenshot({path:'output/playwright/linear-bone.png'});
+ await page.locator('.personal-trend-picker select').selectOption('bone_p1np');
+ await page.locator('.personal-trend').getByRole('heading',{name:'Bone biomarker · P1NP'}).waitFor();
+ check((await page.locator('.personal-trend .personal-kicker').textContent()).includes('21'),'Weekly metric uses a cadence-appropriate twenty-one-day window');
+ await nav.getByRole('button',{name:'Signals & trends',exact:true}).click();
+ await page.getByRole('heading',{name:'Stored trends & comparison'}).waitFor();
+ check(await page.locator('.trend-controls select').first().inputValue()==='129600','Historical explorer opens with the complete ninety-day context');
+ await page.waitForFunction(()=>Number(document.querySelector('.history [role="img"]')?.getAttribute('aria-label')?.match(/([\d,]+) persisted/)?.[1]?.replaceAll(',',''))>100);
+ check(true,'Combined explorer retains the stored multi-metric series');
+ await page.getByRole('button',{name:'Deselect all',exact:true}).click();
+ await page.getByText('Choose metrics by category',{exact:true}).click();
+ await page.locator('label.metric-option').filter({hasText:'Bone mineral density'}).locator('input').check();
+ await page.locator('.history .chart-wrap').screenshot({path:'output/playwright/linear-history-bone.png'});
+ check(true,'Explorer can isolate the same monthly metric as a line');
+ await nav.getByRole('button',{name:'Home',exact:true}).click();
+ const plot=page.locator('.personal-trend [role="img"]');const label=await plot.getAttribute('aria-label');
+ const block=route=>route.request().method()==='GET'?route.abort('failed'):route.continue();
+ await page.route('**/api/v1/**',block);
+ try{
+  await page.getByText('Connection interrupted. Last recorded data remains visible; it is not live.',{exact:true}).last().waitFor();
+  check(await plot.getAttribute('aria-label')===label,'Network failure does not discard recorded trend points');
+ }finally{await page.unroute('**/api/v1/**',block);}
+ await page.setViewportSize({width:390,height:844});
+ const closeNavigation=page.getByRole('button',{name:'Close navigation',exact:true});
+ if(await closeNavigation.isVisible())await page.locator('.sidebar-toggle').click();
+ await page.locator('.personal-trend').screenshot({path:'output/playwright/linear-sleep-mobile.png'});
+ check(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Line trend layout fits a mobile viewport');
+ return {passed:true,checks};
+}

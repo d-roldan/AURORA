@@ -1,0 +1,14 @@
+# Despliegue local
+
+Acceso LAN autorizado el 15/11/2026: Nginx publica `0.0.0.0:${HTTP_PORT:-8085}:8080`. Abrir `http://<IP-del-equipo>:8085` o `/api/docs` desde la misma red; permitir el puerto TCP en el firewall con alcance de subred local. Aplicar cambios de publicación con `docker compose up -d --no-deps aegis-nginx`. Para volver a acceso exclusivo del equipo, restaurar `127.0.0.1` y recrear ese servicio. Este cambio reemplaza las referencias históricas a publicación solo en loopback; backend, bases y Python siguen sin publicar puertos. Sin dominio público ni cambios de volúmenes.
+
+Leer README. `scripts/setup.ps1` preserva .env existente y elige puerto libre a partir de 8085. `docker compose up -d --build` construye frontend/API/Python, inicializa Influx una sola vez, espera Postgres, aplica migraciones y seed antes de API. Migrate es one-shot: Exited(0) esperado. Una única interfaz React/ECharts; no dashboards externos (ADR-001).
+
+Volúmenes nombrados y red aegis_default aislada. Reiniciar: `docker compose restart`; conservar volúmenes. No ejecutar `down -v` salvo autorización de borrado explícita. Backups futuros: pg_dump y `influx backup` a almacenamiento cifrado fuera del host; restauración aún no validada. No cambiar credenciales de DB solo en .env cuando el volumen ya está inicializado: requiere rotación dentro del servicio.
+
+`scripts/provision-tokens.ps1` crea token limitado por bucket para API (lectura/escritura), guarda sin imprimirlos y es idempotente si están en .env. Ejecutar después del primer arranque y recrear API. El token admin se conserva únicamente para inicialización/operación local de Influx y no se entrega al frontend.
+
+Salud: `docker compose ps`; logs `docker compose logs --tail 100`; `/api/v1/system/health` autorizado prueba dependencias. Analytics caída no invalida muestras crudas. Productor STOPPED no significa contenedor caído. Al iniciar API, autostart crea NORMAL con semilla42 solo si el productor está detenido y todavía no tiene runId; una detención manual permanece respetada; si ya está activo conserva su ejecución. Históricos y revisiones sobreviven. La continuidad de eventos se reinicia conservadoramente, no se reconstruye aún desde histórico.
+
+Autonomía: imágenes ya construidas y volúmenes bastan para runtime. Servicios de aplicación y datos en red Compose interna (`internal: true`) sin salida a Internet. Solo Nginx pertenece además a la red de ingreso para publicar localhost; el build usa su propia red de construcción. UI sin CDN, fuentes remotas ni llamadas cloud. Único puerto publicado por Nginx en loopback. El alcance de la prueba está en VALIDATION.md; no equivale a certificación de operación espacial. No dominio ni publicación externa configurados. Solo datos sintéticos; TLS/identidad corporativa/gestión avanzada de secretos son requisitos previos a uso remoto real.
+

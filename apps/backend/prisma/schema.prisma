@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model Mission {
+  id String @id @default(uuid()) @db.Uuid
+  code String @unique
+  name String
+  startAt DateTime @default(now())
+  status String @default("ACTIVE")
+  crew CrewMember[]
+  habitats Habitat[]
+  devices Device[]
+  events HealthEvent[]
+  runs SimulationRun[]
+}
+model CrewMember {
+  id String @id @default(uuid()) @db.Uuid
+  missionId String @db.Uuid
+  mission Mission @relation(fields: [missionId], references: [id])
+  code String
+  displayName String
+  role String
+  devices Device[]
+  baselines HealthBaseline[]
+  events HealthEvent[]
+  checkIns HealthCheckIn[]
+  users User[]
+  @@unique([missionId, code])
+}
+model Habitat {
+  id String @id @default(uuid()) @db.Uuid
+  missionId String @db.Uuid
+  mission Mission @relation(fields: [missionId], references: [id])
+  code String @unique
+  name String
+  devices Device[]
+  events HealthEvent[]
+}
+model Device {
+  id String @id @default(uuid()) @db.Uuid
+  missionId String @db.Uuid
+  mission Mission @relation(fields: [missionId], references: [id])
+  code String @unique
+  crewMemberId String? @db.Uuid
+  crewMember CrewMember? @relation(fields: [crewMemberId], references: [id])
+  habitatId String? @db.Uuid
+  habitat Habitat? @relation(fields: [habitatId], references: [id])
+  kind String
+  status String @default("ACTIVE")
+  lastSeenAt DateTime?
+  operationalAlerts OperationalAlertState[]
+}
+model OperationalAlertState {
+  id String @id @default(uuid()) @db.Uuid
+  deviceId String @db.Uuid
+  device Device @relation(fields: [deviceId], references: [id])
+  metricKey String
+  level String @default("NONE")
+  eventId String? @db.Uuid
+  firstObservedAt DateTime?
+  lastObservedAt DateTime
+  recoveryCount Int @default(0)
+  ruleVersion Int @default(1)
+  @@unique([deviceId, metricKey])
+  @@index([level])
+}
+model MetricDefinition {
+  key String @id
+  unit String
+  scope String
+  expectedIntervalMs Float @default(2000)
+  staleAfterMs Float @default(10000)
+  category String
+  label String @default("")
+  cadence String @default("CONTINUOUS")
+  sourceKind String @default("SIMULATED")
+  displayMin Float @default(0)
+  displayMax Float @default(100)
+  description String @default("")
+}
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  username String @unique
+  passwordHash String
+  role String
+  crewMemberId String? @db.Uuid
+  crewMember CrewMember? @relation(fields: [crewMemberId], references: [id])
+  enabled Boolean @default(true)
+}
+model HealthBaseline {
+  id String @id @default(uuid()) @db.Uuid
+  crewMemberId String @db.Uuid
+  crewMember CrewMember @relation(fields: [crewMemberId], references: [id])
+  metricKey String
+  context String @default("REST")
+  center Float
+  spread Float
+  method String
+  version Int
+  createdAt DateTime @default(now())
+  @@unique([crewMemberId, metricKey, version])
+}
+model AlertRule {
+  id String @id
+  metricKey String
+  version Int
+  deviationPercent Float
+  sustainSeconds Int
+  enabled Boolean @default(true)
+  demoOnly Boolean @default(true)
+}
+model HealthEvent {
+  id String @id @default(uuid()) @db.Uuid
+  missionId String @db.Uuid
+  mission Mission @relation(fields: [missionId], references: [id])
+  crewMemberId String? @db.Uuid
+  crewMember CrewMember? @relation(fields: [crewMemberId], references: [id])
+  habitatId String? @db.Uuid
+  habitat Habitat? @relation(fields: [habitatId], references: [id])
+  type String
+  severity String
+  status String @default("OPEN")
+  firstObservedAt DateTime
+  lastObservedAt DateTime
+  ruleVersion Int @default(1)
+  evidence Json
+  dedupKey String @unique
+  acknowledgedAt DateTime?
+  resolvedAt DateTime?
+  acknowledgedBy String?
+  resolvedBy String?
+  acknowledgementNote String?
+  resolutionNote String?
+  @@index([status, firstObservedAt])
+}
+model HealthCheckIn {
+  id String @id @default(uuid()) @db.Uuid
+  crewMemberId String @db.Uuid
+  crewMember CrewMember @relation(fields: [crewMemberId], references: [id])
+  createdBy String
+  recordedAt DateTime @default(now())
+  observedAt DateTime @default(now())
+  title String @default("")
+  category String @default("GENERAL")
+  fatigueScore Int?
+  sleepHours Float?
+  notes String
+  @@index([crewMemberId, observedAt])
+}
+model SimulationRun {
+  id String @id @default(uuid()) @db.Uuid
+  missionId String @db.Uuid
+  mission Mission @relation(fields: [missionId], references: [id])
+  scenario String
+  seed Int
+  status String
+  startedAt DateTime @default(now())
+  stoppedAt DateTime?
+  config Json
+}
+model AuditLog {
+  id String @id @default(uuid()) @db.Uuid
+  actorId String
+  action String
+  entityType String
+  entityId String
+  createdAt DateTime @default(now())
+  metadata Json
+  @@index([createdAt])
+}
+model EvidenceSource {
+  id String @id @default(uuid()) @db.Uuid
+  title String
+  url String @unique
+  license String
+  provenance String
+  reviewedAt DateTime @default(now())
+}

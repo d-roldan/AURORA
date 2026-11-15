@@ -1,0 +1,3587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="dashboard">
+  <meta name="design-style" content="haven">
+  <title>AURORA — Autonomous Health &amp; Mental Resilience System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* Page and surfaces (Haven base + Warm Sand accents) */
+      --background: #f5f6f5;
+      --surface-container-low: #ffffff;
+      --surface-container: #e3ebe2;
+      --surface-container-high: #dbe2dd;
+      --sand-wash: #efe8dc;
+      --sand-ink: #5e4b34;
+      --sand-border: #d8ccb8;
+
+      /* Ink */
+      --on-surface: #23272a;
+      --on-surface-variant: #5c6468;
+
+      /* Rules */
+      --outline: #c9d0cc;
+      --outline-variant: #dde2df;
+
+      /* Accents */
+      --primary: #3c5a6e;
+      --on-primary: #ffffff;
+      --primary-container: #e2e9ee;
+      --on-primary-container: #2a4152;
+      --secondary: #4f6b53;
+      --tertiary: #5f7c63;
+      --error: #a63d32;
+      --on-error: #ffffff;
+
+      /* Semantic & Data series */
+      --positive: #4f6b53;
+      --warning: #8f6234;
+      --focus: #3c5a6e;
+      --data-1: #3c5a6e;
+      --data-2: #5f7c63;
+      --data-3: #a8694a;
+      --data-4: #8a7a68;
+      --data-context: #c3cac6;
+
+      /* Fonts */
+      --font-headline: 'Outfit', sans-serif;
+      --font-body: 'Hanken Grotesk', sans-serif;
+      --font-label: 'Outfit', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+
+      /* Type scale (Dashboard) */
+      --display-size: clamp(1.75rem, 1.4rem + 1.1vw, 2.25rem);
+      --headline-size: clamp(1.25rem, 1.1rem + 0.45vw, 1.5rem);
+      --subhead-size: clamp(1.05rem, 1rem + 0.25vw, 1.1875rem);
+      --body-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
+      --label-size: 0.78rem;
+
+      /* Spacing scale */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.25rem;
+      --space-2xl: 3.5rem;
+
+      /* Shape & Hairline */
+      --rounded: 0.375rem;
+      --rounded-lg: 0.5rem;
+      --rounded-full: 9999px;
+      --hairline: 1px solid var(--outline-variant);
+      --hairline-control: 1px solid var(--outline);
+      --elevation: none;
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+
+      --sidebar-width: 268px;
+    }
+
+    /* Base reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      overflow-x: clip;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header { position: static !important; }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    /* Shell layout for 1920x1080 horizontal monitor + responsive */
+    .app-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    /* Fixed Left Vertical Sidebar */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: var(--surface-container-low);
+      border-right: var(--hairline);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: var(--space-lg) var(--space-md);
+      z-index: 20;
+      overflow-y: auto;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: 0 var(--space-sm) var(--space-md);
+      border-bottom: var(--hairline);
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--rounded-full);
+      background: var(--surface-container);
+      border: 1px solid var(--outline-variant);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.15rem;
+      letter-spacing: -0.015em;
+      color: var(--on-surface);
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .brand-sub {
+      font-family: var(--font-label);
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--secondary);
+      margin: 2px 0 0;
+    }
+
+    .mission-clock-card {
+      background: var(--sand-wash);
+      border: 1px solid var(--sand-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-sm) var(--space-md);
+      margin: var(--space-md) 0;
+    }
+
+    .clock-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--space-xs);
+    }
+
+    .mono-val {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--on-surface);
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: var(--space-sm) 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 0;
+      border-left: 2px solid transparent;
+      border-radius: var(--rounded);
+      background: transparent;
+      color: var(--on-surface-variant);
+      font-family: var(--font-label);
+      font-weight: 500;
+      font-size: 0.92rem;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+
+    .nav-item:hover {
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+    }
+
+    .nav-item.is-active {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      border-left-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer {
+      border-top: var(--hairline);
+      padding-top: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .crew-badge {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding: 6px var(--space-xs);
+    }
+
+    .crew-name {
+      font-family: var(--font-headline);
+      font-weight: 500;
+      font-size: 0.88rem;
+      color: var(--on-surface);
+    }
+
+    .crew-role {
+      font-size: 0.76rem;
+      color: var(--on-surface-variant);
+    }
+
+    .sidebar-actions {
+      display: flex;
+      gap: var(--space-xs);
+    }
+
+    /* Mobile top bar */
+    .mobile-topbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--surface-container-low);
+      border-bottom: var(--hairline);
+    }
+
+    /* Main Workspace */
+    .main-workspace {
+      padding: var(--space-lg) var(--space-xl);
+      max-width: 1640px;
+      width: 100%;
+      margin: 0 auto;
+      min-width: 0;
+    }
+
+    .view-section {
+      display: none;
+      animation: viewFade var(--dur-short) var(--ease-out);
+    }
+
+    .view-section.is-active {
+      display: block;
+    }
+
+    @keyframes viewFade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typography Treatments (Haven) */
+    .headline {
+      font-family: var(--font-headline);
+      font-weight: 400;
+      font-size: var(--display-size);
+      letter-spacing: -0.02em;
+      line-height: 1.08;
+      color: var(--on-surface);
+      margin: 0;
+    }
+
+    .headline strong {
+      font-weight: 600;
+    }
+
+    .section-headline {
+      font-family: var(--font-headline);
+      font-weight: 400;
+      font-size: var(--headline-size);
+      letter-spacing: -0.015em;
+      line-height: 1.15;
+      color: var(--on-surface);
+      margin: 0;
+    }
+
+    .section-headline strong {
+      font-weight: 600;
+    }
+
+    .subhead {
+      font-family: var(--font-headline);
+      font-weight: 500;
+      font-size: var(--subhead-size);
+      letter-spacing: -0.01em;
+      color: var(--on-surface);
+      margin: 0;
+    }
+
+    .label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+      letter-spacing: 0.015em;
+      text-transform: none;
+      color: var(--on-surface-variant);
+      display: block;
+    }
+
+    .caption-sage {
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: var(--secondary);
+      margin-top: var(--space-xs);
+    }
+
+    /* Hairline Panel */
+    .panel {
+      background: var(--surface-container-low);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      box-shadow: var(--elevation);
+      padding: var(--space-lg);
+      min-width: 0;
+    }
+
+    .panel-sage {
+      background: var(--surface-container);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      min-width: 0;
+    }
+
+    .panel-sand {
+      background: var(--sand-wash);
+      border: 1px solid var(--sand-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-lg);
+      min-width: 0;
+    }
+
+    /* View Header */
+    .view-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding-bottom: var(--space-md);
+      margin-bottom: var(--space-lg);
+      border-bottom: var(--hairline);
+    }
+
+    .header-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      align-items: center;
+    }
+
+    /* Tags & Chips */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--rounded-full);
+      background: var(--surface-container);
+      color: var(--secondary);
+      font-family: var(--font-label);
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    .tag-sand {
+      background: var(--sand-wash);
+      color: var(--sand-ink);
+    }
+
+    .tag-slate {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+
+    .tag-alert {
+      background: #f5e6e4;
+      color: var(--error);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 40px;
+      padding: 8px 16px;
+      border-radius: var(--rounded);
+      font-family: var(--font-label);
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: var(--hairline-control);
+      background: transparent;
+      color: var(--on-surface);
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--surface-container-high);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--on-primary);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--on-primary-container);
+      border-color: var(--on-primary-container);
+    }
+
+    .btn-sm {
+      min-height: 34px;
+      padding: 5px 11px;
+      font-size: 0.8125rem;
+    }
+
+    .btn-chip {
+      min-height: 34px;
+      padding: 6px 12px;
+      border-radius: var(--rounded-full);
+      border: var(--hairline-control);
+      background: var(--surface-container-low);
+      font-family: var(--font-label);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--on-surface);
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+
+    .btn-chip:hover {
+      background: var(--surface-container);
+      color: var(--secondary);
+    }
+
+    .btn-chip.is-selected {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--on-primary);
+    }
+
+    /* Inputs */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-control, .select-control, .textarea-control {
+      width: 100%;
+      background: var(--surface-container-low);
+      border: var(--hairline-control);
+      border-radius: var(--rounded);
+      padding: 9px 12px;
+      color: var(--on-surface);
+      font-size: 0.9375rem;
+      transition: border-color var(--dur-micro) var(--ease-out);
+    }
+
+    .select-control {
+      padding-right: 32px;
+    }
+
+    .input-control:focus, .select-control:focus, .textarea-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-container);
+    }
+
+    .input-row {
+      display: flex;
+      gap: var(--space-sm);
+      align-items: flex-end;
+    }
+
+    /* Grids */
+    .home-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.32fr) minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+
+    .kpi-grid-2x2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+
+    .kpi-tile {
+      background: var(--surface-container-low);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md);
+    }
+
+    .kpi-value {
+      font-family: var(--font-headline);
+      font-weight: 500;
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--on-surface);
+      margin: 4px 0 2px;
+      line-height: 1.15;
+    }
+
+    /* Aurora Companion Stage */
+    .aurora-stage {
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      gap: var(--space-lg);
+      align-items: center;
+      padding-bottom: var(--space-md);
+      border-bottom: var(--hairline);
+      margin-bottom: var(--space-md);
+    }
+
+    .aurora-avatar-wrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--background);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-md) var(--space-sm);
+      cursor: pointer;
+    }
+
+    .aurora-svg {
+      width: 184px;
+      height: 210px;
+      display: block;
+    }
+
+    .aurora-core-pulse {
+      transform-origin: center;
+      transition: transform var(--dur-long) var(--ease-in-out), opacity var(--dur-long) var(--ease-in-out);
+    }
+
+    .aurora-avatar-wrap.is-breathing .aurora-core-pulse {
+      animation: auroraBreath 6s infinite ease-in-out;
+    }
+
+    @keyframes auroraBreath {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50% { transform: scale(1.16); opacity: 1; }
+    }
+
+    .aurora-eye {
+      transition: transform var(--dur-micro) var(--ease-out);
+      transform-origin: center;
+    }
+
+    .aurora-avatar-wrap:hover .aurora-eye {
+      transform: scaleY(0.82);
+    }
+
+    .chat-log {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      max-height: 280px;
+      min-height: 210px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: var(--space-md);
+    }
+
+    .chat-msg {
+      padding: 10px 14px;
+      border-radius: var(--rounded-lg);
+      max-width: 90%;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .chat-msg-aurora {
+      background: var(--background);
+      border: var(--hairline);
+      align-self: flex-start;
+      color: var(--on-surface);
+    }
+
+    .chat-msg-user {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      align-self: flex-end;
+    }
+
+    .chat-msg-meta {
+      font-family: var(--font-label);
+      font-size: 0.72rem;
+      color: var(--secondary);
+      margin-bottom: 3px;
+      font-weight: 500;
+    }
+
+    .quick-commands {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: var(--space-md);
+    }
+
+    /* Inline Breathing Drawer inside Home */
+    .breathing-inline {
+      display: none;
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      background: var(--surface-container);
+      border: var(--hairline);
+      border-radius: var(--rounded-lg);
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+
+    .breathing-inline.is-open {
+      display: flex;
+    }
+
+    /* Habits list */
+    .habit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding: 10px 12px;
+      border-bottom: var(--hairline);
+      cursor: pointer;
+    }
+
+    .habit-item:last-child {
+      border-bottom: 0;
+    }
+
+    .habit-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .habit-check {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    /* Phase Selector Bar */
+    .phase-bar {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      background: var(--surface-container-low);
+      border: var(--hairline);
+      border-radius: var(--rounded);
+      padding: 4px;
+    }
+
+    .phase-btn {
+      min-height: 36px;
+      padding: 6px 12px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--on-surface-variant);
+      font-family: var(--font-label);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+
+    .phase-btn:hover {
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+    }
+
+    .phase-btn.is-active {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+
+    /* Body Schema View */
+    .body-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.18fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+
+    .body-schema-stage {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .body-svg-container {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    .body-hotspot-btn {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      min-height: 34px;
+      border-radius: var(--rounded-full);
+      border: 1px solid var(--outline);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      font-family: var(--font-label);
+      font-size: 0.76rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+
+    .body-hotspot-btn:hover {
+      background: var(--surface-container-high);
+    }
+
+    .body-hotspot-btn.is-active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--on-primary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--rounded-full);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .dot-nominal { background: var(--tertiary); }
+    .dot-watch { background: var(--data-3); }
+    .dot-alert { background: var(--error); }
+
+    .zone-pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: var(--space-md);
+      justify-content: center;
+    }
+
+    .biomarker-cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-md);
+      margin: var(--space-md) 0;
+    }
+
+    .biomarker-card {
+      background: var(--background);
+      border: var(--hairline);
+      border-radius: var(--rounded);
+      padding: var(--space-md);
+    }
+
+    /* Calendar & Routine View */
+    .calendar-grid-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.9fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .cal-weekday {
+      font-family: var(--font-label);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--on-surface-variant);
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .cal-cell {
+      min-height: 86px;
+      padding: 8px;
+      border: var(--hairline);
+      border-radius: var(--rounded);
+      background: var(--surface-container-low);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+
+    .cal-cell:hover {
+      background: var(--surface-container-high);
+    }
+
+    .cal-cell.is-today {
+      border-color: var(--primary);
+      background: var(--primary-container);
+    }
+
+    .cal-cell.is-selected {
+      outline: 2px solid var(--primary);
+      outline-offset: 1px;
+    }
+
+    .cal-cell.is-empty {
+      background: transparent;
+      border-color: transparent;
+      cursor: default;
+    }
+
+    .cal-day-num {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--on-surface);
+    }
+
+    .cal-sol {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--on-surface-variant);
+    }
+
+    .cal-dots {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cal-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: var(--rounded-full);
+      background: var(--outline-variant);
+    }
+
+    .cal-dot.done-ex { background: var(--primary); }
+    .cal-dot.done-sl { background: var(--tertiary); }
+    .cal-dot.done-bi { background: var(--data-3); }
+
+    .cal-event-pill {
+      font-size: 0.68rem;
+      padding: 2px 5px;
+      border-radius: 3px;
+      background: var(--sand-wash);
+      color: var(--sand-ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 4px;
+    }
+
+    .weekly-blocks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .schedule-row {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr) auto;
+      gap: var(--space-md);
+      align-items: center;
+      padding: 10px 14px;
+      border: var(--hairline);
+      border-radius: var(--rounded);
+      background: var(--surface-container-low);
+    }
+
+    /* Challenges View */
+    .challenges-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-lg);
+      align-items: stretch;
+    }
+
+    .pvt-stage {
+      min-height: 170px;
+      border-radius: var(--rounded-lg);
+      border: var(--hairline-control);
+      background: var(--background);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      margin: var(--space-md) 0;
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+
+    .pvt-stage.is-waiting {
+      background: var(--sand-wash);
+    }
+
+    .pvt-stage.is-stimulus {
+      background: var(--surface-container);
+      border-color: var(--secondary);
+    }
+
+    .f2b-stage {
+      min-height: 170px;
+      border-radius: var(--rounded-lg);
+      border: var(--hairline-control);
+      background: var(--background);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+      margin: var(--space-md) 0;
+    }
+
+    /* Quiet Space View */
+    .quiet-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+
+    .sound-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-sm);
+      margin: var(--space-md) 0;
+    }
+
+    .sound-card {
+      padding: 12px;
+      border: var(--hairline);
+      border-radius: var(--rounded);
+      background: var(--background);
+      text-align: left;
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+
+    .sound-card:hover {
+      background: var(--surface-container-high);
+    }
+
+    .sound-card.is-playing {
+      background: var(--surface-container);
+      border-color: var(--secondary);
+    }
+
+    .breath-circle-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg) 0;
+    }
+
+    .breath-orb {
+      width: 148px;
+      height: 148px;
+      border-radius: var(--rounded-full);
+      background: var(--surface-container);
+      border: 2px solid var(--secondary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: transform 4s var(--ease-in-out), background-color 2s var(--ease-in-out);
+    }
+
+    .breath-orb.phase-inhale {
+      transform: scale(1.22);
+      background: var(--primary-container);
+      border-color: var(--primary);
+    }
+
+    .breath-orb.phase-hold {
+      transform: scale(1.22);
+      background: var(--sand-wash);
+      border-color: var(--sand-ink);
+    }
+
+    .breath-orb.phase-exhale {
+      transform: scale(0.92);
+      background: var(--surface-container);
+      border-color: var(--secondary);
+    }
+
+    .journal-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      max-height: 360px;
+      overflow-y: auto;
+      margin-top: var(--space-md);
+    }
+
+    .journal-entry {
+      padding: 12px 14px;
+      border: var(--hairline);
+      border-radius: var(--rounded);
+      background: var(--background);
+    }
+
+    /* Chart containers: explicit min-height required */
+    .chart-box {
+      position: relative;
+      width: 100%;
+      min-height: 230px;
+      height: 240px;
+    }
+
+    .chart-box-tall {
+      position: relative;
+      width: 100%;
+      min-height: 260px;
+      height: 270px;
+    }
+
+    /* Table clean styling (Haven) */
+    .clean-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .clean-table th {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+      color: var(--on-surface-variant);
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: var(--hairline);
+    }
+
+    .clean-table td {
+      padding: 9px 10px;
+      border-bottom: var(--hairline);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .clean-table tr:hover td {
+      background: var(--surface-container-high);
+    }
+
+    .inline-notice {
+      font-size: 0.84rem;
+      color: var(--secondary);
+      margin-top: 6px;
+      min-height: 1.2em;
+    }
+
+    .source-footer {
+      margin-top: var(--space-xl);
+      padding-top: var(--space-md);
+      border-top: var(--hairline);
+      font-size: 0.8rem;
+      color: var(--on-surface-variant);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    /* Responsive breakpoints */
+    @media (max-width: 1220px) {
+      .home-grid, .body-grid, .calendar-grid-layout, .quiet-grid {
+        grid-template-columns: 1fr;
+      }
+      .challenges-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+      .mobile-topbar {
+        display: flex;
+      }
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        transition: transform var(--dur-short) var(--ease-out);
+      }
+      .sidebar.is-mobile-open {
+        transform: translateX(0);
+      }
+      .main-workspace {
+        padding: var(--space-md);
+      }
+      .aurora-stage {
+        grid-template-columns: 1fr;
+      }
+      .biomarker-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-grid { grid-template-columns: 1fr; }
+      .kpi-grid-2x2 { grid-template-columns: 1fr; }
+      .sound-grid { grid-template-columns: 1fr; }
+      .cal-cell { min-height: 62px; padding: 5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-topbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="brand-mark" aria-hidden="true">
+        <i data-lucide="compass"></i>
+      </div>
+      <div>
+        <div class="brand-name">AURORA</div>
+        <div class="brand-sub">Sol 142 · Nov 14, 2026</div>
+      </div>
+    </div>
+    <button type="button" class="btn btn-sm" onclick="toggleMobileNav()">Menu</button>
+  </div>
+
+  <div class="app-shell">
+    <!-- Fixed Left Vertical Sidebar -->
+    <aside class="sidebar" id="app-sidebar" aria-label="Primary Navigation">
+      <div>
+        <div class="brand-block">
+          <div class="brand-mark" aria-hidden="true">
+            <i data-lucide="sparkles"></i>
+          </div>
+          <div>
+            <h1 class="brand-name">AURORA</h1>
+            <p class="brand-sub">Autonomous Health &amp; Resilience</p>
+          </div>
+        </div>
+
+        <div class="mission-clock-card">
+          <div class="clock-row">
+            <span class="label">Mission Sol</span>
+            <span class="mono-val" id="sidebar-sol">Sol 142 / 365</span>
+          </div>
+          <div class="clock-row" style="margin-top:4px;">
+            <span class="label">Earth Date</span>
+            <span class="mono-val">Nov 14, 2026</span>
+          </div>
+          <div class="clock-row" style="margin-top:4px;">
+            <span class="label">Earth-Link Delay</span>
+            <span class="mono-val" id="sidebar-latency">14m 20s one-way</span>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button type="button" class="nav-item is-active" data-view="home" onclick="switchView('home')">
+            <i data-lucide="home" aria-hidden="true"></i>
+            <span>Home</span>
+          </button>
+          <button type="button" class="nav-item" data-view="body" onclick="switchView('body')">
+            <i data-lucide="activity" aria-hidden="true"></i>
+            <span>Body &amp; Clinical Biomarkers</span>
+          </button>
+          <button type="button" class="nav-item" data-view="routine" onclick="switchView('routine')">
+            <i data-lucide="calendar" aria-hidden="true"></i>
+            <span>Routine &amp; Calendar</span>
+          </button>
+          <button type="button" class="nav-item" data-view="challenges" onclick="switchView('challenges')">
+            <i data-lucide="brain" aria-hidden="true"></i>
+            <span>Challenges</span>
+          </button>
+          <button type="button" class="nav-item" data-view="quiet" onclick="switchView('quiet')">
+            <i data-lucide="leaf" aria-hidden="true"></i>
+            <span>Quiet Space</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="crew-badge">
+          <div>
+            <div class="crew-name">Cmdr. Elena Vance</div>
+            <div class="crew-role">ISS / Deep-Space Analog 04</div>
+          </div>
+          <span class="tag" id="sidebar-phase-tag">L+30</span>
+        </div>
+        <div class="sidebar-actions">
+          <button type="button" class="btn btn-sm" style="flex:1;" onclick="exportMissionLog()">Export Log</button>
+          <button type="button" class="btn btn-sm" id="reset-state-btn" onclick="resetAppState(this)">Reset</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-workspace">
+
+      <!-- VIEW 1: HOME -->
+      <section id="view-home" class="view-section is-active" aria-labelledby="home-title">
+        <div class="view-header">
+          <div>
+            <h2 id="home-title" class="headline">Good afternoon, <strong>Commander Vance</strong></h2>
+            <p class="caption-sage" id="home-subtitle">Sol 142 · Autonomous onboard monitoring active · Circadian schedule aligned</p>
+          </div>
+          <div class="header-chips">
+            <span class="tag" id="chip-sleep">Sleep: 6.4h (Aligned)</span>
+            <span class="tag tag-sand" id="chip-exercise">Exercise: 1.5 / 2.5h</span>
+            <span class="tag tag-slate" id="chip-phase">Phase: In-flight L+30</span>
+          </div>
+        </div>
+
+        <div class="home-grid">
+          <!-- Left: Aurora Companion & Conversational Console -->
+          <div class="panel">
+            <div class="aurora-stage">
+              <div class="aurora-avatar-wrap" id="aurora-avatar-box" onclick="nudgeAurora()" role="button" tabindex="0" aria-label="Interact with Aurora AI Companion">
+                <!-- Sleek, friendly, soft-geometric female AI companion (Baymax-inspired ceramic minimalism with female contours) -->
+                <svg class="aurora-svg" viewBox="0 0 220 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <!-- Soft ambient grounding halo -->
+                  <ellipse cx="110" cy="232" rx="64" ry="10" fill="var(--surface-container)" />
+                  <!-- Sculpted soft-geometric female torso -->
+                  <path d="M52 216 C50 176, 62 148, 76 135 C86 126, 97 124, 110 124 C123 124, 134 126, 144 135 C158 148, 170 176, 168 216 C167 224, 152 228, 110 228 C68 228, 53 224, 52 216 Z" fill="var(--surface-container-low)" stroke="var(--outline)" stroke-width="2" />
+                  <!-- Gentle contoured waist & soft sage side inlays -->
+                  <path d="M72 152 C78 175, 78 194, 70 218" stroke="var(--surface-container-high)" stroke-width="4" stroke-linecap="round" />
+                  <path d="M148 152 C142 175, 142 194, 150 218" stroke="var(--surface-container-high)" stroke-width="4" stroke-linecap="round" />
+                  <!-- Soft sculpted arms -->
+                  <path d="M72 138 C52 146, 40 176, 46 202 C48 210, 56 212, 61 206 C66 198, 65 174, 74 156" fill="var(--surface-container-low)" stroke="var(--outline)" stroke-width="2" stroke-linecap="round" />
+                  <path d="M148 138 C168 146, 180 176, 174 202 C172 210, 164 212, 159 206 C154 198, 155 174, 146 156" fill="var(--surface-container-low)" stroke="var(--outline)" stroke-width="2" stroke-linecap="round" />
+                  <!-- Warm sand collar ring -->
+                  <path d="M84 126 C94 134, 126 134, 136 126" stroke="var(--sand-ink)" stroke-width="3" stroke-linecap="round" opacity="0.65" />
+                  <!-- Neck -->
+                  <rect x="98" y="106" width="24" height="22" rx="10" fill="var(--surface-container-low)" stroke="var(--outline)" stroke-width="1.8" />
+                  <!-- Sleek rounded oval head with subtle hair-contour crown -->
+                  <ellipse cx="110" cy="72" rx="44" ry="40" fill="var(--surface-container-low)" stroke="var(--outline)" stroke-width="2" />
+                  <!-- Soft geometric sage-slate forehead/crown band -->
+                  <path d="M68 62 C72 34, 148 34, 152 62 C136 52, 84 52, 68 62 Z" fill="var(--surface-container)" />
+                  <!-- Visor / expressive face plate -->
+                  <rect x="78" y="60" width="64" height="30" rx="15" fill="var(--background)" stroke="var(--outline-variant)" stroke-width="1.5" />
+                  <!-- Friendly Baymax-inspired connected eyes -->
+                  <line x1="94" y1="75" x2="126" y2="75" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" opacity="0.45" />
+                  <circle class="aurora-eye" cx="93" cy="75" r="4.8" fill="var(--primary)" />
+                  <circle class="aurora-eye" cx="127" cy="75" r="4.8" fill="var(--primary)" />
+                  <!-- Gentle cheek warmth -->
+                  <ellipse cx="83" cy="81" rx="4.5" ry="2.5" fill="var(--sand-border)" opacity="0.7" />
+                  <ellipse cx="137" cy="81" rx="4.5" ry="2.5" fill="var(--sand-border)" opacity="0.7" />
+                  <!-- Chest affective resonance core -->
+                  <circle class="aurora-core-pulse" cx="110" cy="164" r="14" fill="var(--surface-container)" stroke="var(--secondary)" stroke-width="1.8" />
+                  <circle class="aurora-core-pulse" cx="110" cy="164" r="6" fill="var(--primary)" opacity="0.75" />
+                </svg>
+                <span class="tag" id="aurora-mood-badge" style="margin-top:6px;">Attentive · Non-clinical</span>
+              </div>
+
+              <div>
+                <span class="label">Aurora Companion · COSMIC Affective Support</span>
+                <h3 class="section-headline" style="margin-top:4px;">Hello Elena, <strong>I am here</strong> whenever Earth feels far.</h3>
+                <p style="margin:8px 0 12px; color:var(--on-surface-variant); font-size:0.93rem;">
+                  With a 14m 20s signal delay to Houston, we can log your daily countermeasures, review NASA Standard Measures, or take a 2-minute quiet reset together right here.
+                </p>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                  <button type="button" class="btn btn-sm btn-primary" onclick="toggleHomeBreathing()">Start breathing reset</button>
+                  <button type="button" class="btn btn-sm" onclick="switchView('quiet')">Open Quiet Space</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Inline Breathing Session triggered from Aurora or button -->
+            <div class="breathing-inline" id="home-breathing-box">
+              <div>
+                <span class="label">Coherence Breathing · 4-4-6 Cadence</span>
+                <div class="subhead" id="home-breath-phase" style="margin-top:2px;">Inhale slowly… 4s</div>
+                <p style="margin:4px 0 0; font-size:0.84rem; color:var(--on-surface-variant);">Autonomic vagal reset to buffer isolation stress and lower cortisol.</p>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="breath-orb" id="home-breath-orb" style="width:76px;height:76px;">
+                  <span class="mono-val" id="home-breath-count">4s</span>
+                </div>
+                <button type="button" class="btn btn-sm" onclick="toggleHomeBreathing()">Close</button>
+              </div>
+            </div>
+
+            <!-- Conversational Box -->
+            <div class="chat-log" id="aurora-chat-log" aria-live="polite"></div>
+
+            <div class="quick-commands" aria-label="Suggested commands">
+              <button type="button" class="btn-chip" onclick="runAuroraCommand('Aurora, log 2.5h exercise')">"Aurora, log 2.5h exercise"</button>
+              <button type="button" class="btn-chip" onclick="runAuroraCommand('Show sleep trend')">"Show sleep trend"</button>
+              <button type="button" class="btn-chip" onclick="runAuroraCommand('Start breathing session')">"Start breathing session"</button>
+              <button type="button" class="btn-chip" onclick="runAuroraCommand('Check cognitive readiness')">"Check cognitive readiness"</button>
+            </div>
+
+            <form onsubmit="handleAuroraSubmit(event)" class="input-row">
+              <div class="field-group" style="flex:1;">
+                <label for="aurora-input" class="label">Talk / Command Aurora</label>
+                <input type="text" id="aurora-input" class="input-control" autocomplete="off">
+              </div>
+              <button type="button" class="btn" id="voice-cmd-btn" onclick="triggerVoiceCommand()" title="Simulated or browser voice input">
+                <i data-lucide="mic" aria-hidden="true"></i>
+                <span>Voice</span>
+              </button>
+              <button type="submit" class="btn btn-primary">Send</button>
+            </form>
+            <div class="inline-notice" id="aurora-voice-status"></div>
+          </div>
+
+          <!-- Right Column: Operational Resilience Snapshot -->
+          <div style="display:flex; flex-direction:column; gap:var(--space-lg);">
+            <div class="kpi-grid-2x2">
+              <div class="kpi-tile">
+                <span class="label">Countermeasure Exercise</span>
+                <div class="kpi-value" id="kpi-exercise">1.5 / 2.5h</div>
+                <div class="caption-sage" id="kpi-exercise-cap">1.0h remaining today</div>
+              </div>
+              <div class="kpi-tile">
+                <span class="label">Sleep &amp; Circadian</span>
+                <div class="kpi-value" id="kpi-sleep">6.4 h</div>
+                <div class="caption-sage" id="kpi-sleep-cap">Aligned (vs 5.4h misaligned)</div>
+              </div>
+              <div class="kpi-tile">
+                <span class="label">Autonomic HRV (RMSSD)</span>
+                <div class="kpi-value" id="kpi-hrv">62 ms</div>
+                <div class="caption-sage">Nominal vagal tone</div>
+              </div>
+              <div class="kpi-tile">
+                <span class="label">Subjective Mood</span>
+                <div class="kpi-value" id="kpi-mood">7.8 / 10</div>
+                <div class="caption-sage" id="kpi-mood-cap">Stable · Pre-third quarter</div>
+              </div>
+            </div>
+
+            <div class="panel" id="home-sleep-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-sm);">
+                <div>
+                  <span class="label">Actigraphy &amp; Sleep Alignment (Last 7 Sols)</span>
+                  <h3 class="subhead">Circadian Sleep Duration</h3>
+                </div>
+                <span class="tag">Target: 6.4h+</span>
+              </div>
+              <div class="chart-box">
+                <canvas id="homeSleepChart"></canvas>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-sm);">
+                <h3 class="subhead">Today's Mandatory Habits</h3>
+                <button type="button" class="btn btn-sm" onclick="switchView('routine')">Full Calendar</button>
+              </div>
+              <div id="home-habits-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: BODY & CLINICAL BIOMARKERS -->
+      <section id="view-body" class="view-section" aria-labelledby="body-title">
+        <div class="view-header">
+          <div>
+            <h2 id="body-title" class="headline">Body Schema &amp; <strong>NASA Standard Measures</strong></h2>
+            <p class="caption-sage">Interactive anatomical telemetry tracking multi-system adaptation across mission phases</p>
+          </div>
+          <div>
+            <span class="label" style="margin-bottom:4px;">Longitudinal Mission Phase</span>
+            <div class="phase-bar" role="group" aria-label="Mission Phase Selector">
+              <button type="button" class="phase-btn" data-phase="preflight" onclick="setMissionPhase('preflight')">Pre-flight</button>
+              <button type="button" class="phase-btn is-active" data-phase="L30plus" onclick="setMissionPhase('L30plus')">In-flight L+30</button>
+              <button type="button" class="phase-btn" data-phase="L30minus" onclick="setMissionPhase('L30minus')">L-30</button>
+              <button type="button" class="phase-btn" data-phase="R10plus" onclick="setMissionPhase('R10plus')">Post-flight R+10</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="body-grid">
+          <!-- Left: Anatomical Schema -->
+          <div class="panel body-schema-stage">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-sm);">
+              <span class="label">Select an anatomical system</span>
+              <span class="tag tag-sand" id="body-phase-badge">Phase: In-flight L+30</span>
+            </div>
+
+            <div class="body-svg-container">
+              <!-- Clean realistic anatomical silhouette with organ/system overlays -->
+              <svg viewBox="0 0 360 560" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <!-- Subtle anatomical grid lines -->
+                <line x1="180" y1="16" x2="180" y2="544" stroke="var(--outline-variant)" stroke-dasharray="4 4" />
+                <line x1="36" y1="120" x2="324" y2="120" stroke="var(--outline-variant)" stroke-dasharray="3 5" />
+                <line x1="36" y1="265" x2="324" y2="265" stroke="var(--outline-variant)" stroke-dasharray="3 5" />
+                <line x1="36" y1="390" x2="324" y2="390" stroke="var(--outline-variant)" stroke-dasharray="3 5" />
+
+                <!-- Outer anatomical human silhouette -->
+                <path d="M180 28
+                         C198 28, 210 42, 210 62
+                         C210 78, 200 90, 194 96
+                         L195 112
+                         C222 118, 246 128, 255 152
+                         L274 244
+                         C278 262, 272 284, 263 292
+                         C256 297, 250 288, 248 274
+                         L234 178
+                         L230 250
+                         C232 276, 236 300, 232 328
+                         L222 430
+                         L216 520
+                         C215 532, 198 534, 194 522
+                         L186 355
+                         L180 338
+                         L174 355
+                         L166 522
+                         C162 534, 145 532, 144 520
+                         L138 430
+                         L128 328
+                         C124 300, 128 276, 130 250
+                         L126 178
+                         L112 274
+                         C110 288, 104 297, 97 292
+                         C88 284, 82 262, 86 244
+                         L105 152
+                         C114 128, 138 118, 165 112
+                         L166 96
+                         C160 90, 150 78, 150 62
+                         C150 42, 162 28, 180 28 Z"
+                      fill="var(--background)" stroke="var(--outline)" stroke-width="2" />
+
+                <!-- Brain / Cranial region -->
+                <path d="M162 48 C164 36, 196 36, 198 48 C202 58, 194 68, 180 68 C166 68, 158 58, 162 48 Z"
+                      fill="var(--primary-container)" stroke="var(--primary)" stroke-width="1.5" />
+                <!-- Ocular / SANS nodes -->
+                <circle cx="171" cy="60" r="3.5" fill="var(--data-3)" />
+                <circle cx="189" cy="60" r="3.5" fill="var(--data-3)" />
+                <!-- Carotid vessels -->
+                <path d="M173 90 L171 124 M187 90 L189 124" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" />
+                <!-- Heart / Cardiovascular -->
+                <path d="M180 156 C172 146, 158 152, 162 166 C166 178, 182 188, 186 190 C190 186, 202 174, 200 160 C198 148, 186 148, 180 156 Z"
+                      fill="var(--primary-container)" stroke="var(--primary)" stroke-width="1.6" />
+                <!-- Endocrine / HPA Axis -->
+                <ellipse cx="180" cy="212" rx="18" ry="8" fill="var(--sand-wash)" stroke="var(--sand-ink)" stroke-width="1.4" />
+                <!-- Microbiome / Gut & Immune -->
+                <path d="M158 236 C158 224, 202 224, 202 240 C202 256, 162 256, 162 270 C162 282, 198 282, 198 294"
+                      fill="none" stroke="var(--secondary)" stroke-width="3" stroke-linecap="round" opacity="0.65" />
+                <!-- Skeletal Spine & Femur -->
+                <line x1="180" y1="100" x2="180" y2="305" stroke="var(--outline)" stroke-width="3" stroke-dasharray="6 4" />
+                <path d="M160 330 L154 428 M200 330 L206 428" stroke="var(--sand-ink)" stroke-width="3.2" stroke-linecap="round" opacity="0.65" />
+              </svg>
+
+              <!-- Clickable Anatomical Zone Buttons -->
+              <button type="button" class="body-hotspot-btn is-active" data-zone="brain" style="top:8%; left:76%;" onclick="selectBodyZone('brain')">
+                <span class="status-dot dot-watch"></span>Brain &amp; Cognition
+              </button>
+              <button type="button" class="body-hotspot-btn" data-zone="ocular" style="top:13%; left:20%;" onclick="selectBodyZone('ocular')">
+                <span class="status-dot dot-watch"></span>Eyes (SANS)
+              </button>
+              <button type="button" class="body-hotspot-btn" data-zone="cardio" style="top:29%; left:78%;" onclick="selectBodyZone('cardio')">
+                <span class="status-dot dot-nominal"></span>Carotid &amp; HRV
+              </button>
+              <button type="button" class="body-hotspot-btn" data-zone="endocrine" style="top:39%; left:18%;" onclick="selectBodyZone('endocrine')">
+                <span class="status-dot dot-nominal"></span>Cortisol &amp; Sleep
+              </button>
+              <button type="button" class="body-hotspot-btn" data-zone="immune" style="top:50%; left:78%;" onclick="selectBodyZone('immune')">
+                <span class="status-dot dot-nominal"></span>Immune &amp; Microbiome
+              </button>
+              <button type="button" class="body-hotspot-btn" data-zone="musculo" style="top:69%; left:22%;" onclick="selectBodyZone('musculo')">
+                <span class="status-dot dot-watch"></span>Bone &amp; Muscle
+              </button>
+            </div>
+
+            <div class="zone-pill-row" aria-label="Quick zone navigation">
+              <button type="button" class="btn-chip is-selected" data-zone-pill="brain" onclick="selectBodyZone('brain')">Cognition (PVT/F2B/DSST)</button>
+              <button type="button" class="btn-chip" data-zone-pill="ocular" onclick="selectBodyZone('ocular')">SANS</button>
+              <button type="button" class="btn-chip" data-zone-pill="cardio" onclick="selectBodyZone('cardio')">Carotid IMT &amp; HRV</button>
+              <button type="button" class="btn-chip" data-zone-pill="endocrine" onclick="selectBodyZone('endocrine')">Cortisol &amp; Sleep</button>
+              <button type="button" class="btn-chip" data-zone-pill="immune" onclick="selectBodyZone('immune')">Immune</button>
+              <button type="button" class="btn-chip" data-zone-pill="musculo" onclick="selectBodyZone('musculo')">BMD</button>
+            </div>
+          </div>
+
+          <!-- Right: Clinical Telemetry & Longitudinal Chart -->
+          <div style="display:flex; flex-direction:column; gap:var(--space-lg);">
+            <div class="panel">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-md);">
+                <div>
+                  <span class="label" id="zone-protocol-label">NASA Spaceflight Standard Measures · Cognition Battery</span>
+                  <h3 class="section-headline" id="zone-title" style="margin-top:4px;"><strong>Brain &amp; Cognitive</strong> Performance</h3>
+                </div>
+                <span class="tag tag-sand" id="zone-status-tag">Mild Phase Shift</span>
+              </div>
+
+              <p id="zone-summary" style="margin:12px 0; color:var(--on-surface-variant); max-width:65ch;"></p>
+
+              <div class="biomarker-cards" id="zone-metrics-grid"></div>
+
+              <div class="panel-sand">
+                <span class="label">Spaceflight Hazard Link &amp; Countermeasure Guidance</span>
+                <p id="zone-countermeasure" style="margin:6px 0 0; font-size:0.9rem; color:var(--on-surface);"></p>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-sm);">
+                <div>
+                  <span class="label">Longitudinal Mission Trajectory</span>
+                  <h3 class="subhead" id="zone-chart-title">Pre-flight → L+30 → L-30 → R+10 Trend</h3>
+                </div>
+                <span class="tag" id="zone-chart-band-label">Reference Range Shaded</span>
+              </div>
+              <div class="chart-box-tall">
+                <canvas id="bodyLongitudinalChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: ROUTINE & CALENDAR -->
+      <section id="view-routine" class="view-section" aria-labelledby="routine-title">
+        <div class="view-header">
+          <div>
+            <h2 id="routine-title" class="headline">Temporal Orientation &amp; <strong>Mission Routine</strong></h2>
+            <p class="caption-sage">Anchoring circadian cues and mandatory habits to counter deep-space monotony</p>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:var(--space-sm); align-items:center;">
+            <div class="phase-bar" role="group" aria-label="Calendar Mode">
+              <button type="button" class="phase-btn is-active" id="cal-mode-month" onclick="setCalendarMode('month')">Monthly Grid</button>
+              <button type="button" class="phase-btn" id="cal-mode-week" onclick="setCalendarMode('week')">Daily Circadian Blocks</button>
+            </div>
+            <div class="phase-bar" role="group" aria-label="Routine Longitudinal Phase">
+              <button type="button" class="phase-btn" data-phase="preflight" onclick="setMissionPhase('preflight')">Pre-flight</button>
+              <button type="button" class="phase-btn is-active" data-phase="L30plus" onclick="setMissionPhase('L30plus')">L+30</button>
+              <button type="button" class="phase-btn" data-phase="L30minus" onclick="setMissionPhase('L30minus')">L-30</button>
+              <button type="button" class="phase-btn" data-phase="R10plus" onclick="setMissionPhase('R10plus')">R+10</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calendar-grid-layout">
+          <!-- Left: Monthly Grid or Weekly Circadian Blocks + Longitudinal Chart -->
+          <div style="display:flex; flex-direction:column; gap:var(--space-lg);">
+            <div class="panel" id="calendar-month-panel">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md);">
+                <div>
+                  <span class="label">Earth Synchronization · Sol 129 to Sol 158</span>
+                  <h3 class="subhead">November 2026</h3>
+                </div>
+                <div style="display:flex; gap:12px; font-size:0.78rem; color:var(--on-surface-variant);">
+                  <span><span class="cal-dot done-ex" style="display:inline-block;"></span> Exercise</span>
+                  <span><span class="cal-dot done-sl" style="display:inline-block;"></span> Sleep Hygiene</span>
+                  <span><span class="cal-dot done-bi" style="display:inline-block;"></span> Biophilic Break</span>
+                </div>
+              </div>
+              <div class="cal-weekdays">
+                <div class="cal-weekday">Sun</div>
+                <div class="cal-weekday">Mon</div>
+                <div class="cal-weekday">Tue</div>
+                <div class="cal-weekday">Wed</div>
+                <div class="cal-weekday">Thu</div>
+                <div class="cal-weekday">Fri</div>
+                <div class="cal-weekday">Sat</div>
+              </div>
+              <div class="cal-days" id="calendar-days-grid"></div>
+            </div>
+
+            <div class="panel" id="calendar-week-panel" style="display:none;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-md);">
+                <div>
+                  <span class="label">Circadian-Aligned Daily Architecture (Nov 14, 2026 · Sol 142)</span>
+                  <h3 class="subhead">Structured Time &amp; Blue-Light Cues</h3>
+                </div>
+                <span class="tag">Light Cue: 480nm Morning</span>
+              </div>
+              <div class="weekly-blocks" id="weekly-schedule-list"></div>
+            </div>
+
+            <div class="panel">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-sm);">
+                <div>
+                  <span class="label">Longitudinal Habit &amp; Sleep Hygiene Trend</span>
+                  <h3 class="subhead" id="routine-trend-title">Mission Phase Adherence Overview</h3>
+                </div>
+                <span class="tag tag-sand" id="routine-phase-pill">Current Focus: L+30</span>
+              </div>
+              <div class="chart-box">
+                <canvas id="routineTrendChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Day Inspector & Habit Logger -->
+          <div class="panel">
+            <span class="label">Selected Day Telemetry</span>
+            <h3 class="section-headline" id="selected-day-heading" style="margin-top:4px;"><strong>Nov 14, 2026</strong> · Sol 142</h3>
+            <p class="caption-sage" id="selected-day-event">Scheduled: Weekly Private Medical Conference (15m) &amp; ARED Session</p>
+
+            <div style="display:flex; flex-direction:column; gap:var(--space-md); margin-top:var(--space-lg);">
+              <div class="field-group">
+                <label for="slider-exercise" class="label">Mandatory Countermeasure Exercise (Target: 2.5h / day)</label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <input type="range" id="slider-exercise" min="0" max="3" step="0.25" value="1.5" style="flex:1;" oninput="syncExerciseFromSlider(this.value)">
+                  <input type="number" id="input-exercise" min="0" max="3" step="0.25" value="1.5" class="input-control" style="width:88px;" oninput="syncExerciseFromNumber(this.value)">
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label for="slider-sleep" class="label">Sleep Duration (Aligned Benchmark: 6.4h vs Misaligned: 5.4h)</label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <input type="range" id="slider-sleep" min="3.5" max="9" step="0.1" value="6.4" style="flex:1;" oninput="syncSleepFromSlider(this.value)">
+                  <input type="number" id="input-sleep" min="3.5" max="9" step="0.1" value="6.4" class="input-control" style="width:88px;" oninput="syncSleepFromNumber(this.value)">
+                </div>
+              </div>
+
+              <div style="border-top:var(--hairline); padding-top:var(--space-md);">
+                <span class="label" style="margin-bottom:8px;">Daily Resilience Protocol</span>
+                <div id="day-protocol-checks">
+                  <label class="habit-item">
+                    <span class="habit-left">
+                      <input type="checkbox" class="habit-check" id="day-biophilic-chk" checked>
+                      <span>Biophilic / Plant Care Break (20m)</span>
+                    </span>
+                  </label>
+                  <label class="habit-item">
+                    <span class="habit-left">
+                      <input type="checkbox" class="habit-check" id="day-bluelight-chk" checked onchange="toggleHabit('blueLight', this.checked)">
+                      <span>Morning 480nm Blue-Light Exposure</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-primary" onclick="saveSelectedDayLog()">Save Sol Log</button>
+              <div class="inline-notice" id="day-save-notice"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: CHALLENGES (EXERGAMING & COGNITIVE MINIGAMES) -->
+      <section id="view-challenges" class="view-section" aria-labelledby="challenges-title">
+        <div class="view-header">
+          <div>
+            <h2 id="challenges-title" class="headline">Cognitive Readiness &amp; <strong>Exergaming</strong></h2>
+            <p class="caption-sage">NASA Standard Measures self-checks paired with Social-Generated (SG) exercise pacing</p>
+          </div>
+          <div class="header-chips">
+            <span class="tag" id="challenge-pvt-best">PVT Best: 238 ms</span>
+            <span class="tag tag-sand" id="challenge-f2b-best">F2B Accuracy: 94%</span>
+          </div>
+        </div>
+
+        <div class="challenges-grid">
+          <!-- 1. PVT Vigilance Minigame -->
+          <div class="panel" style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="label">Standard Measure · Sustained Attention</span>
+                <span class="tag">PVT-B (5 Trials)</span>
+              </div>
+              <h3 class="subhead" style="margin-top:6px;">Psychomotor Vigilance Test</h3>
+              <p style="font-size:0.88rem; color:var(--on-surface-variant); margin:6px 0 0;">
+                Wait for the calm sage signal, then tap immediately. Detects sleep-loss lapses before dual-task performance drops.
+              </p>
+
+              <div class="pvt-stage" id="pvt-stage" onclick="handlePvtClick()" role="button" tabindex="0" aria-label="PVT Stimulus Area">
+                <div class="subhead" id="pvt-prompt">Press Start to begin 5-trial PVT</div>
+                <div class="mono-val" id="pvt-readout" style="margin-top:8px; font-size:1.15rem;">Baseline: 238 ms</div>
+              </div>
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <button type="button" class="btn btn-primary" id="pvt-start-btn" onclick="startPvtTest()">Start PVT Check</button>
+                <span class="mono-val" id="pvt-trial-count">Trial 0 / 5</span>
+              </div>
+              <div class="inline-notice" id="pvt-summary"></div>
+            </div>
+          </div>
+
+          <!-- 2. F2B Working Memory Minigame -->
+          <div class="panel" style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="label">Standard Measure · Visual Working Memory</span>
+                <span class="tag tag-sand">F2B Sequence</span>
+              </div>
+              <h3 class="subhead" style="margin-top:6px;">Fractal 2-Back Challenge</h3>
+              <p style="font-size:0.88rem; color:var(--on-surface-variant); margin:6px 0 0;">
+                Tap <strong>Match (2-Back)</strong> if the current botanical geometry matches the symbol shown 2 steps earlier.
+              </p>
+
+              <div class="f2b-stage">
+                <div id="f2b-symbol" style="color:var(--primary); min-height:74px; display:flex; align-items:center; justify-content:center;">
+                  <span class="label">Ready for 8-step sequence</span>
+                </div>
+                <div class="mono-val" id="f2b-step-label" style="margin-top:8px;">Step 0 / 8</div>
+              </div>
+            </div>
+
+            <div>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn btn-primary" id="f2b-start-btn" onclick="startF2bGame()">Start 2-Back</button>
+                <button type="button" class="btn" id="f2b-match-btn" onclick="submitF2bMatch()" disabled style="flex:1;">Match (2-Back)</button>
+              </div>
+              <div class="inline-notice" id="f2b-summary"></div>
+            </div>
+          </div>
+
+          <!-- 3. SG Exergaming Countermeasure Pacer -->
+          <div class="panel" style="display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="label">BHP Countermeasure · SG Exercise Partner</span>
+                <span class="tag">2.5h Daily Goal</span>
+              </div>
+              <h3 class="subhead" style="margin-top:6px;">Virtual Rowing &amp; ARED Pacer</h3>
+              <p style="font-size:0.88rem; color:var(--on-surface-variant); margin:6px 0 0;">
+                Paired with a Social-Generated (SG) virtual pacing partner to sustain aerobic motivation and preserve bone density.
+              </p>
+
+              <div class="field-group" style="margin-top:14px;">
+                <label for="exergame-mode" class="label">Select Countermeasure Modality</label>
+                <select id="exergame-mode" class="select-control" onchange="updateExergamePreview()">
+                  <option value="row">VR Coastal Sculling (45 min · Aerobic)</option>
+                  <option value="ared">ARED Squat &amp; Deadlift Block (60 min · BMD)</option>
+                  <option value="t2">T2 Harness Trail Run (45 min · Bone + Cardio)</option>
+                </select>
+              </div>
+
+              <div class="panel-sand" style="margin-top:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span class="label">SG Partner Pace</span>
+                  <span class="mono-val" id="exergame-cadence">76 RPM · Steady</span>
+                </div>
+                <div style="margin-top:8px; height:8px; background:var(--surface-container-low); border-radius:var(--rounded-full); overflow:hidden;">
+                  <div id="exergame-progress-bar" style="height:100%; width:60%; background:var(--secondary); transition:width var(--dur-short) var(--ease-out);"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:0.8rem; color:var(--sand-ink);">
+                  <span id="exergame-today-label">Logged today: 1.5h / 2.5h</span>
+                  <span id="exergame-session-timer">00:00</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn" id="exergame-pace-btn" onclick="toggleExergamePacer()" style="flex:1;">Start Live Pacer</button>
+                <button type="button" class="btn btn-primary" onclick="logExergameBlock(0.5)">Log +0.5h</button>
+              </div>
+              <div class="inline-notice" id="exergame-notice"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 5: QUIET SPACE -->
+      <section id="view-quiet" class="view-section" aria-labelledby="quiet-title">
+        <div class="view-header">
+          <div>
+            <h2 id="quiet-title" class="headline">Quiet Space · <strong>Biophilic Refuge</strong></h2>
+            <p class="caption-sage">Restorative Earth soundscapes, vagal breathing, and private encrypted journaling</p>
+          </div>
+          <div class="header-chips">
+            <span class="tag">Zero Ground Transmission</span>
+            <span class="tag tag-sand" id="quiet-audio-status">Audio: Idle</span>
+          </div>
+        </div>
+
+        <div class="quiet-grid">
+          <!-- Left: Soundscapes & Breathing -->
+          <div style="display:flex; flex-direction:column; gap:var(--space-lg);">
+            <div class="panel">
+              <span class="label">Synthesized Biophilic Soundscapes (Web Audio)</span>
+              <h3 class="subhead" style="margin-top:4px;">Sensory Grounding from Earth</h3>
+
+              <div class="sound-grid">
+                <button type="button" class="sound-card" data-sound="rain" onclick="toggleSoundscape('rain')">
+                  <div class="subhead" style="font-size:0.95rem;">Temperate Forest Rain</div>
+                  <div class="caption-sage" style="font-size:0.8rem;">Soft canopy rainfall</div>
+                </button>
+                <button type="button" class="sound-card" data-sound="ocean" onclick="toggleSoundscape('ocean')">
+                  <div class="subhead" style="font-size:0.95rem;">Coastal Horizon Surf</div>
+                  <div class="caption-sage" style="font-size:0.8rem;">Slow tidal swell</div>
+                </button>
+                <button type="button" class="sound-card" data-sound="wind" onclick="toggleSoundscape('wind')">
+                  <div class="subhead" style="font-size:0.95rem;">Alpine Pines &amp; Wind</div>
+                  <div class="caption-sage" style="font-size:0.8rem;">Filtered breeze &amp; drone</div>
+                </button>
+                <button type="button" class="sound-card" data-sound="cabin" onclick="toggleSoundscape('cabin')">
+                  <div class="subhead" style="font-size:0.95rem;">Warm Habitat Hum</div>
+                  <div class="caption-sage" style="font-size:0.8rem;">Low grounding resonance</div>
+                </button>
+              </div>
+
+              <div style="display:flex; align-items:flex-end; gap:var(--space-md);">
+                <div class="field-group" style="flex:1;">
+                  <label for="sound-volume" class="label">Ambient Volume</label>
+                  <input type="range" id="sound-volume" min="0" max="100" value="45" oninput="updateSoundVolume(this.value)">
+                </div>
+                <button type="button" class="btn btn-sm" onclick="stopAllAudio()">Silence</button>
+              </div>
+            </div>
+
+            <div class="panel-sage">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <span class="label">Autonomic Regulation</span>
+                  <h3 class="subhead">4-4-6 Coherence Breathing</h3>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" id="quiet-breath-btn" onclick="toggleQuietBreathing()">Begin Cycle</button>
+              </div>
+              <div class="breath-circle-wrap">
+                <div class="breath-orb" id="quiet-breath-orb">
+                  <span class="subhead" id="quiet-breath-label">Ready</span>
+                  <span class="mono-val" id="quiet-breath-sec" style="margin-top:2px;">4 · 4 · 6</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Private Micro-Venting Journal -->
+          <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <span class="label">COSMIC Privacy-First Reflection</span>
+                <h3 class="subhead" style="margin-top:4px;">Private Micro-Venting Journal</h3>
+              </div>
+              <span class="tag tag-sand" id="journal-count-tag">0 entries</span>
+            </div>
+            <p style="font-size:0.88rem; color:var(--on-surface-variant); margin:8px 0 14px;">
+              Inspired by spaceflight diary research: brief, unjudged reflection helps process isolation, monotony, and third-quarter tension. Stored locally in your workspace only.
+            </p>
+
+            <div class="quick-commands" aria-label="Reflection prompts">
+              <button type="button" class="btn-chip" onclick="useJournalPrompt('Third-quarter tension check: ')">Third-quarter check</button>
+              <button type="button" class="btn-chip" onclick="useJournalPrompt('Missing home / family moment: ')">Missing Earth</button>
+              <button type="button" class="btn-chip" onclick="useJournalPrompt('Crew interaction note: ')">Crew dynamics</button>
+              <button type="button" class="btn-chip" onclick="useJournalPrompt('One small moment of gratitude today: ')">Small win</button>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 180px minmax(0, 1fr); gap:var(--space-md); margin-bottom:var(--space-sm);">
+              <div class="field-group">
+                <label for="journal-mood" class="label">Current Mood</label>
+                <select id="journal-mood" class="select-control">
+                  <option value="Calm">Calm</option>
+                  <option value="Focused">Focused</option>
+                  <option value="Restless">Restless</option>
+                  <option value="Homesick">Homesick</option>
+                  <option value="Fatigued">Fatigued</option>
+                  <option value="Grateful">Grateful</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="journal-text" class="label">Private Reflection Entry</label>
+                <textarea id="journal-text" rows="3" class="textarea-control"></textarea>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="inline-notice" id="journal-notice"></span>
+              <button type="button" class="btn btn-primary" onclick="saveJournalEntry()">Save Private Entry</button>
+            </div>
+
+            <div class="journal-list" id="journal-entries-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="source-footer">
+        <span>Grounded in NASA Human Research Program (5 Hazards of Human Spaceflight &amp; Spaceflight Standard Measures), Behavioral Health &amp; Performance Evidence Report, and COSMIC / ANSIBLE ICE frameworks.</span>
+        <span>AURORA Autonomous Console · Non-clinical support &amp; self-monitoring</span>
+      </footer>
+    </main>
+  </div>
+
+  <api-shim></api-shim>
+  <script>
+    // =========================================================================
+    // AURORA STATE & CLINICAL DATA MODELS
+    // =========================================================================
+    const DEFAULT_STATE = {
+      activeView: 'home',
+      missionPhase: 'L30plus',
+      selectedZone: 'brain',
+      selectedDay: 14,
+      calendarMode: 'month',
+      exerciseHours: 1.5,
+      sleepHours: 6.4,
+      habits: {
+        exercise: false,
+        sleep: true,
+        biophilic: true,
+        blueLight: true,
+        winscat: false
+      },
+      dayLogs: {
+        1: { ex: 2.5, sl: 6.5, bi: true },
+        2: { ex: 2.5, sl: 6.2, bi: true },
+        3: { ex: 2.0, sl: 5.8, bi: false },
+        4: { ex: 2.5, sl: 6.6, bi: true },
+        5: { ex: 2.5, sl: 6.4, bi: true },
+        6: { ex: 1.5, sl: 5.5, bi: true },
+        7: { ex: 2.5, sl: 6.7, bi: true },
+        8: { ex: 2.5, sl: 6.3, bi: true },
+        9: { ex: 2.25, sl: 6.1, bi: false },
+        10: { ex: 2.5, sl: 6.5, bi: true },
+        11: { ex: 2.5, sl: 6.8, bi: true },
+        12: { ex: 2.0, sl: 5.9, bi: true },
+        13: { ex: 2.5, sl: 6.4, bi: true },
+        14: { ex: 1.5, sl: 6.4, bi: true }
+      },
+      pvtBestMs: 238,
+      pvtLastMs: null,
+      f2bBestPct: 94,
+      f2bLastPct: null,
+      journalEntries: [],
+      chatHistory: [
+        {
+          sender: 'aurora',
+          time: 'Sol 142 · 13:15',
+          text: `Welcome back, Elena. Your sleep averaged 6.4h this week—well above the 5.4h circadian-misaligned threshold. You have 1.0h remaining on today's 2.5h countermeasure exercise target.`
+        }
+      ]
+    };
+
+    let appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+    const PHASE_LABELS = {
+      preflight: `Pre-flight Baseline`,
+      L30plus: `In-flight L+30`,
+      L30minus: `In-flight L-30`,
+      R10plus: `Post-flight R+10`
+    };
+
+    const BODY_ZONES = {
+      brain: {
+        title: `<strong>Brain &amp; Cognitive</strong> Performance`,
+        protocol: `NASA Spaceflight Standard Measures · Cognition Battery`,
+        summary: `Evaluates processing speed (DSST), visual working memory (F2B), and sustained attention (PVT). Early-flight adaptation often brings mild slowing in processing speed and working memory before stabilizing.`,
+        countermeasure: `Hazards: Space Radiation, Microgravity &amp; Circadian Disruption. Actions: Complete monthly WinSCAT/PVT screening, prioritize 6.4h+ aligned sleep, and consume antioxidant-rich nutrition.`,
+        chartTitle: `PVT Reaction Time Trajectory (ms — lower is faster)`,
+        unit: `ms`,
+        rangeMin: 210,
+        rangeMax: 260,
+        series: [238, 264, 258, 252, 243],
+        phases: {
+          preflight: {
+            status: `Baseline`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `PVT Vigilance`, val: `238 ms`, note: `Target < 260 ms` },
+              { name: `F2B Memory`, val: `94%`, note: `Nominal baseline` },
+              { name: `DSST Speed`, val: `68 /min`, note: `Pre-launch norm` }
+            ]
+          },
+          L30plus: {
+            status: `Mild Phase Shift`,
+            tagClass: `tag tag-sand`,
+            metrics: [
+              { name: `PVT Vigilance`, val: `264 ms`, note: `+26 ms early flight` },
+              { name: `F2B Memory`, val: `88%`, note: `Watch dual-task load` },
+              { name: `DSST Speed`, val: `61 /min`, note: `Mild slowing` }
+            ]
+          },
+          L30minus: {
+            status: `Stabilizing`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `PVT Vigilance`, val: `252 ms`, note: `Within operational norm` },
+              { name: `F2B Memory`, val: `91%`, note: `Adapted` },
+              { name: `DSST Speed`, val: `64 /min`, note: `Recovering` }
+            ]
+          },
+          R10plus: {
+            status: `Recovering`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `PVT Vigilance`, val: `243 ms`, note: `Near baseline` },
+              { name: `F2B Memory`, val: `93%`, note: `Post-landing check` },
+              { name: `DSST Speed`, val: `66 /min`, note: `Readaptation nominal` }
+            ]
+          }
+        }
+      },
+      ocular: {
+        title: `<strong>Ocular &amp; Neuro-Ocular</strong> (SANS)`,
+        protocol: `NASA HRP · Spaceflight Associated Neuro-ocular Syndrome`,
+        summary: `Tracks cephalad fluid shift, intracranial fluid pressure, and posterior globe flattening during prolonged microgravity.`,
+        countermeasure: `Hazard: Altered Gravity Fields. Actions: Review B-Complex vitamin supplementation status, evaluate Thigh Cuff fluid-sequestering protocol, and log visual acuity checks.`,
+        chartTitle: `Retinal Nerve Fiber Layer Thickness Delta (µm)`,
+        unit: `µm`,
+        rangeMin: 94,
+        rangeMax: 108,
+        series: [98, 106, 111, 109, 102],
+        phases: {
+          preflight: {
+            status: `Baseline`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `RNFL Thickness`, val: `98 µm`, note: `OCT baseline` },
+              { name: `Choroid Shift`, val: `0 µm`, note: `Reference` },
+              { name: `Near Acuity`, val: `20/20`, note: `Unchanged` }
+            ]
+          },
+          L30plus: {
+            status: `Watch Fluid Shift`,
+            tagClass: `tag tag-sand`,
+            metrics: [
+              { name: `RNFL Thickness`, val: `106 µm`, note: `+8 µm edema watch` },
+              { name: `Choroid Shift`, val: `+22 µm`, note: `Cephalad shift` },
+              { name: `Near Acuity`, val: `20/22`, note: `B-Complex active` }
+            ]
+          },
+          L30minus: {
+            status: `Monitored`,
+            tagClass: `tag tag-sand`,
+            metrics: [
+              { name: `RNFL Thickness`, val: `109 µm`, note: `Plateau observed` },
+              { name: `Choroid Shift`, val: `+26 µm`, note: `Thigh cuff protocol` },
+              { name: `Near Acuity`, val: `20/25`, note: `Corrective lenses` }
+            ]
+          },
+          R10plus: {
+            status: `Resolving`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `RNFL Thickness`, val: `102 µm`, note: `Returning to 1G` },
+              { name: `Choroid Shift`, val: `+9 µm`, note: `Decongesting` },
+              { name: `Near Acuity`, val: `20/20`, note: `Restored` }
+            ]
+          }
+        }
+      },
+      cardio: {
+        title: `<strong>Carotid &amp; Autonomic</strong> Cardiovascular`,
+        protocol: `NASA Standard Measures · Carotid Intima-Media &amp; HRV`,
+        summary: `Ultrasound measurement of Carotid Intima-Media Thickness (CIMT) monitors arterial stiffening accelerated by spaceflight, while HRV reflects autonomic stress resilience.`,
+        countermeasure: `Hazards: Space Radiation, Microgravity &amp; Isolation. Actions: Maintain 2.5h daily aerobic + resistive countermeasures and use coherence breathing to support vagal HRV.`,
+        chartTitle: `Heart Rate Variability — RMSSD (ms — higher indicates resilience)`,
+        unit: `ms`,
+        rangeMin: 52,
+        rangeMax: 75,
+        series: [66, 58, 60, 62, 65],
+        phases: {
+          preflight: {
+            status: `Optimal`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Carotid IMT`, val: `0.56 mm`, note: `Reference < 0.65` },
+              { name: `HRV (RMSSD)`, val: `66 ms`, note: `Strong vagal tone` },
+              { name: `Resting BP`, val: `116/74`, note: `Nominal` }
+            ]
+          },
+          L30plus: {
+            status: `Nominal`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Carotid IMT`, val: `0.59 mm`, note: `Within norm` },
+              { name: `HRV (RMSSD)`, val: `58 ms`, note: `Adaptation dip` },
+              { name: `Resting BP`, val: `118/76`, note: `Nominal` }
+            ]
+          },
+          L30minus: {
+            status: `Nominal`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Carotid IMT`, val: `0.62 mm`, note: `Monitor closely` },
+              { name: `HRV (RMSSD)`, val: `62 ms`, note: `Stabilized` },
+              { name: `Resting BP`, val: `119/75`, note: `Nominal` }
+            ]
+          },
+          R10plus: {
+            status: `Reacclimating`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Carotid IMT`, val: `0.58 mm`, note: `Post-flight check` },
+              { name: `HRV (RMSSD)`, val: `65 ms`, note: `Recovered` },
+              { name: `Resting BP`, val: `117/74`, note: `Orthostatic OK` }
+            ]
+          }
+        }
+      },
+      endocrine: {
+        title: `<strong>Endocrine, Cortisol</strong> &amp; Circadian Axis`,
+        protocol: `NASA Standard Measures · Actigraphy &amp; Salivary Stress`,
+        summary: `Combines wrist actigraphy, salivary cortisol/alpha-amylase biomarkers, and sleep-wake alignment. Circadian misalignment reduces average astronaut sleep from 6.4h to 5.4h.`,
+        countermeasure: `Hazards: Hostile Closed Environment &amp; Workload. Actions: Keep 480nm blue-light exposure aligned to morning wake, protect 6.4h+ sleep window, and avoid late high-load tasks.`,
+        chartTitle: `Morning Salivary Cortisol Trajectory (µg/dL)`,
+        unit: `µg/dL`,
+        rangeMin: 10,
+        rangeMax: 18,
+        series: [14.2, 17.8, 16.9, 15.8, 14.6],
+        phases: {
+          preflight: {
+            status: `Aligned`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `AM Cortisol`, val: `14.2 µg/dL`, note: `10–18 ref range` },
+              { name: `Actigraphy Sleep`, val: `6.8 h`, note: `Aligned 92%` },
+              { name: `α-Amylase`, val: `48 U/mL`, note: `Low sympathetic load` }
+            ]
+          },
+          L30plus: {
+            status: `Watch Stress`,
+            tagClass: `tag tag-sand`,
+            metrics: [
+              { name: `AM Cortisol`, val: `17.8 µg/dL`, note: `Upper range` },
+              { name: `Actigraphy Sleep`, val: `6.4 h`, note: `Aligned (vs 5.4h)` },
+              { name: `α-Amylase`, val: `62 U/mL`, note: `Workload peak` }
+            ]
+          },
+          L30minus: {
+            status: `Steady`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `AM Cortisol`, val: `15.8 µg/dL`, note: `Settled` },
+              { name: `Actigraphy Sleep`, val: `6.3 h`, note: `Blue-light aided` },
+              { name: `α-Amylase`, val: `54 U/mL`, note: `Nominal` }
+            ]
+          },
+          R10plus: {
+            status: `Restored`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `AM Cortisol`, val: `14.6 µg/dL`, note: `Earth-aligned` },
+              { name: `Actigraphy Sleep`, val: `7.1 h`, note: `Recovery sleep` },
+              { name: `α-Amylase`, val: `49 U/mL`, note: `Baseline` }
+            ]
+          }
+        }
+      },
+      immune: {
+        title: `<strong>Immune Profile</strong> &amp; Microbiome`,
+        protocol: `NASA Standard Measures · Cellular Profile &amp; Microbiome`,
+        summary: `Monitors blood/saliva immune cells, stress-induced latent viral reactivation, and gut/salivary microbiome diversity inside a closed spacecraft ecosystem.`,
+        countermeasure: `Hazards: Hostile/Closed Environment &amp; Radiation. Actions: Log custom nutrient-rich meals, sustain in-flight plant contact, and monitor microbial hygiene on habitat surfaces.`,
+        chartTitle: `Gut Microbiome Shannon Diversity Index`,
+        unit: `idx`,
+        rangeMin: 3.2,
+        rangeMax: 4.4,
+        series: [4.1, 3.7, 3.6, 3.8, 4.0],
+        phases: {
+          preflight: {
+            status: `Optimal`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Shannon Index`, val: `4.10`, note: `High diversity` },
+              { name: `Viral Reactivation`, val: `None`, note: `Saliva PCR clear` },
+              { name: `Lymphocyte Ratio`, val: `Nominal`, note: `Baseline` }
+            ]
+          },
+          L30plus: {
+            status: `Nominal`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Shannon Index`, val: `3.72`, note: `Dietary fiber focus` },
+              { name: `Viral Reactivation`, val: `Low Trace`, note: `Sub-clinical` },
+              { name: `Lymphocyte Ratio`, val: `Nominal`, note: `Adapted` }
+            ]
+          },
+          L30minus: {
+            status: `Nominal`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Shannon Index`, val: `3.81`, note: `Veggie supplement` },
+              { name: `Viral Reactivation`, val: `Cleared`, note: `Stable` },
+              { name: `Lymphocyte Ratio`, val: `Nominal`, note: `Stable` }
+            ]
+          },
+          R10plus: {
+            status: `Recovering`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Shannon Index`, val: `4.02`, note: `Earth diet rebound` },
+              { name: `Viral Reactivation`, val: `None`, note: `Clear` },
+              { name: `Lymphocyte Ratio`, val: `Baseline`, note: `Restored` }
+            ]
+          }
+        }
+      },
+      musculo: {
+        title: `<strong>Musculoskeletal</strong> &amp; Bone Density`,
+        protocol: `NASA HRP · Cardiorespiratory &amp; Musculoskeletal Fitness`,
+        summary: `Tracks femoral neck Bone Mineral Density (BMD), spinal unloading, and aerobic fitness. Without 2.5h daily loading, microgravity induces 1–1.5% monthly bone mineral loss.`,
+        countermeasure: `Hazard: Altered Gravity Fields. Actions: Complete full 2.5h daily ARED resistive + T2/cycle protocol; pair exercise with Quiet Space or SG exergaming for adherence.`,
+        chartTitle: `Femoral Neck Bone Mineral Density (g/cm²)`,
+        unit: `g/cm²`,
+        rangeMin: 0.96,
+        rangeMax: 1.06,
+        series: [1.03, 1.01, 0.99, 0.98, 0.99],
+        phases: {
+          preflight: {
+            status: `Optimal`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Femoral BMD`, val: `1.03 g/cm²`, note: `DEXA baseline` },
+              { name: `VO2 Peak`, val: `46 mL/kg`, note: `ASCR baseline` },
+              { name: `Daily Loading`, val: `1.5 h`, note: `Pre-flight norm` }
+            ]
+          },
+          L30plus: {
+            status: `Countermeasure Active`,
+            tagClass: `tag tag-sand`,
+            metrics: [
+              { name: `Femoral BMD`, val: `1.01 g/cm²`, note: `-1.9% protected` },
+              { name: `VO2 Peak`, val: `44 mL/kg`, note: `Within 5%` },
+              { name: `Daily Loading`, val: `2.5 h`, note: `ARED + T2 target` }
+            ]
+          },
+          L30minus: {
+            status: `Protected`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Femoral BMD`, val: `0.98 g/cm²`, note: `ARED mitigated` },
+              { name: `VO2 Peak`, val: `43 mL/kg`, note: `Ready for 1G` },
+              { name: `Daily Loading`, val: `2.5 h`, note: `Consistent` }
+            ]
+          },
+          R10plus: {
+            status: `Reconditioning`,
+            tagClass: `tag`,
+            metrics: [
+              { name: `Femoral BMD`, val: `0.99 g/cm²`, note: `ASCR recovery` },
+              { name: `VO2 Peak`, val: `45 mL/kg`, note: `Rebounding` },
+              { name: `Daily Loading`, val: `1.8 h`, note: `1G rehab` }
+            ]
+          }
+        }
+      }
+    };
+
+    const NOVEMBER_EVENTS = {
+      3: `WinSCAT Baseline`,
+      7: `Crew Debrief`,
+      10: `Biophilic Plant Check`,
+      14: `Weekly PMC (15m)`,
+      18: `Biweekly PPC`,
+      22: `WinSCAT Monthly`,
+      26: `Earth View Window`,
+      29: `ARED Calibration`
+    };
+
+    const WEEKLY_CIRCADIAN_BLOCKS = [
+      { time: `06:30 – 07:15`, title: `Wake + 480nm Blue-Light Cue`, detail: `Suppresses residual melatonin & anchors circadian phase`, status: `Done` },
+      { time: `07:15 – 08:00`, title: `Customized Nutrient Meal`, detail: `Antioxidant-enriched prep to support radiation resilience`, status: `Done` },
+      { time: `08:30 – 12:30`, title: `Core Science &amp; EVA Maintenance`, detail: `High-focus window aligned with peak alertness`, status: `Done` },
+      { time: `13:00 – 15:30`, title: `Mandatory 2.5h Countermeasure Exercise`, detail: `ARED resistive loading + VR/SG aerobic session`, status: `Active` },
+      { time: `16:30 – 17:15`, title: `Biophilic Break &amp; Quiet Space`, detail: `Veggie plant care, Earth horizon view, or forest audio`, status: `Scheduled` },
+      { time: `21:30 – 22:15`, title: `Sleep Hygiene Wind-Down`, detail: `Dim warm spectrum, private journal, target 6.4h+ sleep`, status: `Scheduled` }
+    ];
+
+    const F2B_SHAPES = [
+      { id: 'leaf', label: 'Sage Leaf', svg: `<svg width="54" height="54" viewBox="0 0 64 64"><path d="M14 50 C14 24, 34 12, 52 12 C52 32, 40 50, 14 50 Z" fill="var(--surface-container)" stroke="var(--secondary)" stroke-width="2.5"/><path d="M14 50 L44 20" stroke="var(--secondary)" stroke-width="2" stroke-linecap="round"/></svg>` },
+      { id: 'ring', label: 'Orbital Ring', svg: `<svg width="54" height="54" viewBox="0 0 64 64"><circle cx="32" cy="32" r="19" fill="var(--primary-container)" stroke="var(--primary)" stroke-width="2.5"/><circle cx="32" cy="32" r="7" fill="var(--surface-container-low)" stroke="var(--primary)" stroke-width="2"/></svg>` },
+      { id: 'dune', label: 'Warm Sand Arch', svg: `<svg width="54" height="54" viewBox="0 0 64 64"><path d="M12 46 C12 22, 52 22, 52 46 Z" fill="var(--sand-wash)" stroke="var(--sand-ink)" stroke-width="2.5"/></svg>` },
+      { id: 'hex', label: 'Hexagon Core', svg: `<svg width="54" height="54" viewBox="0 0 64 64"><polygon points="32,10 51,21 51,43 32,54 13,43 13,21" fill="var(--background)" stroke="var(--primary)" stroke-width="2.5"/></svg>` }
+    ];
+
+    // Chart instances
+    let homeSleepChart = null;
+    let bodyLongitudinalChart = null;
+    let routineTrendChart = null;
+
+    // Breathing & Challenge timers
+    let homeBreathInterval = null;
+    let quietBreathInterval = null;
+    let pvtState = { status: 'idle', timer: null, startTs: 0, results: [], trial: 0, maxTrials: 5 };
+    let f2bState = { active: false, seq: [], idx: -1, timer: null, hits: 0, misses: 0, falseAlarms: 0, targets: 0, respondedThisStep: false };
+    let exerTimer = null;
+    let exerSeconds = 0;
+
+    // Web Audio Soundscape engine
+    let audioCtx = null;
+    let activeSoundId = null;
+    let activeGainNode = null;
+    let activeStopFn = null;
+
+    // =========================================================================
+    // STATE PERSISTENCE (notebookAppApi)
+    // =========================================================================
+    async function loadPersistentState() {
+      try {
+        if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === 'function') {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved && typeof saved === 'object') {
+            appState = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STATE)), saved);
+            if (!appState.habits) appState.habits = Object.assign({}, DEFAULT_STATE.habits);
+            if (!appState.dayLogs) appState.dayLogs = Object.assign({}, DEFAULT_STATE.dayLogs);
+            if (!Array.isArray(appState.journalEntries)) appState.journalEntries = [];
+            if (!Array.isArray(appState.chatHistory)) appState.chatHistory = DEFAULT_STATE.chatHistory.slice();
+          }
+        }
+      } catch (err) {
+        // Fallback safely to default state
+      }
+    }
+
+    async function persistState() {
+      try {
+        if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === 'function') {
+          await window.notebookAppApi.setAppState(appState);
+        }
+      } catch (err) {
+        // Ignore transient shim errors
+      }
+    }
+
+    function exportMissionLog() {
+      const lines = [
+        `Sol,EarthDate,ExerciseHours,SleepHours,BiophilicBreak,PVTBestMs,F2BBestPct`,
+        ...Object.keys(appState.dayLogs).map(day => {
+          const d = appState.dayLogs[day];
+          const sol = 128 + Number(day);
+          return `${sol},2026-11-${String(day).padStart(2, '0')},${d.ex},${d.sl},${d.bi ? 'Yes' : 'No'},${appState.pvtBestMs},${appState.f2bBestPct}`;
+        })
+      ];
+      const csv = lines.join('\n');
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === 'function') {
+        window.notebookAppApi.triggerFileDownload({
+          content: csv,
+          contentType: 'text/csv',
+          encoding: 'UTF-8',
+          filename: `aurora_sol142_telemetry.csv`
+        });
+      }
+      addAuroraMessage(`aurora`, `Exported your Nov 2026 telemetry log (Sol 129–142) to CSV.`);
+    }
+
+    function resetAppState(btn) {
+      if (!btn) return;
+      if (btn.dataset.armed !== 'true') {
+        btn.dataset.armed = 'true';
+        btn.textContent = `Confirm?`;
+        setTimeout(() => {
+          if (btn.dataset.armed === 'true') {
+            btn.dataset.armed = 'false';
+            btn.textContent = `Reset`;
+          }
+        }, 3500);
+        return;
+      }
+      btn.dataset.armed = 'false';
+      btn.textContent = `Reset`;
+      appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      persistState();
+      renderAll();
+    }
+
+    // =========================================================================
+    // NAVIGATION & GLOBAL SYNC
+    // =========================================================================
+    function switchView(viewId) {
+      appState.activeView = viewId;
+      document.querySelectorAll('.view-section').forEach(sec => {
+        sec.classList.toggle('is-active', sec.id === `view-${viewId}`);
+      });
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.view === viewId);
+      });
+      const sb = document.getElementById('app-sidebar');
+      if (sb) sb.classList.remove('is-mobile-open');
+
+      if (viewId === 'home') renderHomeSleepChart();
+      if (viewId === 'body') renderBodyChart();
+      if (viewId === 'routine') renderRoutineChart();
+      persistState();
+    }
+
+    function toggleMobileNav() {
+      const sb = document.getElementById('app-sidebar');
+      if (sb) sb.classList.toggle('is-mobile-open');
+    }
+
+    function setMissionPhase(phase) {
+      appState.missionPhase = phase;
+      document.querySelectorAll('.phase-btn[data-phase]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.phase === phase);
+      });
+      const chipPhase = document.getElementById('chip-phase');
+      if (chipPhase) chipPhase.textContent = `Phase: ${PHASE_LABELS[phase]}`;
+      const sbTag = document.getElementById('sidebar-phase-tag');
+      if (sbTag) {
+        const shortMap = { preflight: `Pre`, L30plus: `L+30`, L30minus: `L-30`, R10plus: `R+10` };
+        sbTag.textContent = shortMap[phase] || `L+30`;
+      }
+      const bodyBadge = document.getElementById('body-phase-badge');
+      if (bodyBadge) bodyBadge.textContent = `Phase: ${PHASE_LABELS[phase]}`;
+      const rPill = document.getElementById('routine-phase-pill');
+      if (rPill) rPill.textContent = `Current Focus: ${PHASE_LABELS[phase]}`;
+
+      renderBodyDetails();
+      renderBodyChart();
+      renderRoutineChart();
+      persistState();
+    }
+
+    // =========================================================================
+    // HOME: AURORA AVATAR & CONVERSATIONAL COMMANDS
+    // =========================================================================
+    function renderChatLog() {
+      const container = document.getElementById('aurora-chat-log');
+      if (!container) return;
+      container.innerHTML = appState.chatHistory.map(item => {
+        const cls = item.sender === 'user' ? 'chat-msg chat-msg-user' : 'chat-msg chat-msg-aurora';
+        const who = item.sender === 'user' ? `Commander Vance` : `Aurora`;
+        return `<div class="${cls}">
+          <div class="chat-msg-meta">${who} · ${item.time}</div>
+          <div>${item.text}</div>
+        </div>`;
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function addAuroraMessage(sender, text) {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      appState.chatHistory.push({
+        sender: sender,
+        time: `Sol 142 · ${hh}:${mm}`,
+        text: text
+      });
+      if (appState.chatHistory.length > 18) {
+        appState.chatHistory = appState.chatHistory.slice(-18);
+      }
+      renderChatLog();
+      persistState();
+    }
+
+    function nudgeAurora() {
+      const badge = document.getElementById('aurora-mood-badge');
+      if (badge) badge.textContent = `Warm &amp; Listening`;
+      addAuroraMessage(`aurora`, `I'm right here, Elena. Try asking me to log your 2.5h exercise, show your sleep trend, or start a guided breathing session.`);
+    }
+
+    function handleAuroraSubmit(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('aurora-input');
+      if (!input) return;
+      const val = input.value.trim();
+      if (!val) return;
+      input.value = ``;
+      runAuroraCommand(val);
+    }
+
+    function runAuroraCommand(rawText) {
+      addAuroraMessage(`user`, rawText);
+      const q = rawText.toLowerCase();
+
+      // Command: log exercise
+      if (q.includes('exercise') || q.includes('log 2.5') || q.includes('workout') || q.includes('ared')) {
+        const match = q.match(/(\d+(?:\.\d+)?)\s*h/);
+        const hours = match ? Math.min(3, Math.max(0.25, parseFloat(match[1]))) : 2.5;
+        appState.exerciseHours = hours;
+        appState.habits.exercise = hours >= 2.5;
+        if (appState.dayLogs[14]) appState.dayLogs[14].ex = hours;
+        renderHomeMetrics();
+        renderCalendar();
+        updateExergamePreview();
+        const rem = Math.max(0, 2.5 - hours).toFixed(1);
+        addAuroraMessage(
+          `aurora`,
+          hours >= 2.5
+            ? `Logged ${hours.toFixed(1)}h of countermeasure exercise for Sol 142. Your daily 2.5h musculoskeletal target is complete—great work protecting bone mineral density.`
+            : `Logged ${hours.toFixed(1)}h of exercise for Sol 142 (${rem}h remaining toward the 2.5h daily target).`
+        );
+        return;
+      }
+
+      // Command: sleep trend
+      if (q.includes('sleep') || q.includes('circadian')) {
+        renderHomeSleepChart();
+        const card = document.getElementById('home-sleep-card');
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        addAuroraMessage(
+          `aurora`,
+          `Your 7-day actigraphy mean is ${appState.sleepHours.toFixed(1)}h. Staying above 6.4h keeps your circadian rhythm aligned and prevents the ~1.0h deficit and vigilance lapses seen in misaligned schedules.`
+        );
+        return;
+      }
+
+      // Command: breathing session
+      if (q.includes('breath') || q.includes('calm') || q.includes('stress') || q.includes('relax')) {
+        openHomeBreathing();
+        addAuroraMessage(
+          `aurora`,
+          `Starting a 4-4-6 coherence breathing session now. Follow the gentle expanding circle beside me—exhaling longer than you inhale slows heart rate and lowers sympathetic arousal.`
+        );
+        return;
+      }
+
+      // Command: cognitive
+      if (q.includes('cognit') || q.includes('pvt') || q.includes('winscat') || q.includes('readiness')) {
+        addAuroraMessage(
+          `aurora`,
+          `Your best PVT reaction time is ${appState.pvtBestMs} ms (Pre-flight baseline: 238 ms) and F2B working memory accuracy is ${appState.f2bBestPct}%. Open Challenges anytime for a 30-second readiness check.`
+        );
+        return;
+      }
+
+      // Command: homesick / mood / quiet
+      if (q.includes('homesick') || q.includes('lonely') || q.includes('sad') || q.includes('miss') || q.includes('journal')) {
+        addAuroraMessage(
+          `aurora`,
+          `Missing Earth is one of the most natural responses to long-duration isolation. Would you like to visit Quiet Space for coastal horizon audio or write a private micro-entry? Nothing leaves your local console.`
+        );
+        return;
+      }
+
+      // Default warm intelligent response
+      addAuroraMessage(
+        `aurora`,
+        `Understood, Elena. I'm tracking your Sol 142 telemetry (${appState.exerciseHours.toFixed(1)}h exercise, ${appState.sleepHours.toFixed(1)}h sleep). You can ask me to "log 2.5h exercise", "show sleep trend", "check cognitive readiness", or "start breathing session".`
+      );
+    }
+
+    function triggerVoiceCommand() {
+      const statusEl = document.getElementById('aurora-voice-status');
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec) {
+        try {
+          const rec = new SpeechRec();
+          rec.lang = 'en-US';
+          rec.interimResults = false;
+          if (statusEl) statusEl.textContent = `Listening via microphone…`;
+          rec.onresult = (evt) => {
+            const transcript = evt.results[0][0].transcript;
+            if (statusEl) statusEl.textContent = `Heard: "${transcript}"`;
+            runAuroraCommand(transcript);
+          };
+          rec.onerror = () => {
+            simulateVoiceFallback(statusEl);
+          };
+          rec.start();
+          return;
+        } catch (err) {
+          simulateVoiceFallback(statusEl);
+          return;
+        }
+      }
+      simulateVoiceFallback(statusEl);
+    }
+
+    function simulateVoiceFallback(statusEl) {
+      const sample = `Aurora, log 2.5h exercise`;
+      if (statusEl) statusEl.textContent = `Voice capture simulated in sandbox: "${sample}"`;
+      runAuroraCommand(sample);
+    }
+
+    // Inline breathing pacer on Home
+    function openHomeBreathing() {
+      const box = document.getElementById('home-breathing-box');
+      const avatarBox = document.getElementById('aurora-avatar-box');
+      if (!box) return;
+      box.classList.add('is-open');
+      if (avatarBox) avatarBox.classList.add('is-breathing');
+      startHomeBreathTimer();
+    }
+
+    function toggleHomeBreathing() {
+      const box = document.getElementById('home-breathing-box');
+      const avatarBox = document.getElementById('aurora-avatar-box');
+      if (!box) return;
+      const isOpen = box.classList.toggle('is-open');
+      if (avatarBox) avatarBox.classList.toggle('is-breathing', isOpen);
+      if (isOpen) {
+        startHomeBreathTimer();
+      } else {
+        clearInterval(homeBreathInterval);
+        homeBreathInterval = null;
+      }
+    }
+
+    function startHomeBreathTimer() {
+      clearInterval(homeBreathInterval);
+      let sec = 0;
+      const update = () => {
+        const cycle = sec % 14;
+        const orb = document.getElementById('home-breath-orb');
+        const phaseEl = document.getElementById('home-breath-phase');
+        const countEl = document.getElementById('home-breath-count');
+        if (!orb || !phaseEl || !countEl) return;
+        orb.classList.remove('phase-inhale', 'phase-hold', 'phase-exhale');
+        if (cycle < 4) {
+          orb.classList.add('phase-inhale');
+          phaseEl.textContent = `Inhale gently…`;
+          countEl.textContent = `${4 - cycle}s`;
+        } else if (cycle < 8) {
+          orb.classList.add('phase-hold');
+          phaseEl.textContent = `Hold softly…`;
+          countEl.textContent = `${8 - cycle}s`;
+        } else {
+          orb.classList.add('phase-exhale');
+          phaseEl.textContent = `Slow exhale…`;
+          countEl.textContent = `${14 - cycle}s`;
+        }
+        sec += 1;
+      };
+      update();
+      homeBreathInterval = setInterval(update, 1000);
+    }
+
+    function renderHomeMetrics() {
+      const ex = appState.exerciseHours;
+      const sl = appState.sleepHours;
+      const kpiEx = document.getElementById('kpi-exercise');
+      const kpiExCap = document.getElementById('kpi-exercise-cap');
+      const chipEx = document.getElementById('chip-exercise');
+      if (kpiEx) kpiEx.textContent = `${ex.toFixed(1)} / 2.5h`;
+      const rem = Math.max(0, 2.5 - ex);
+      if (kpiExCap) kpiExCap.textContent = rem === 0 ? `Daily BMD target achieved` : `${rem.toFixed(1)}h remaining today`;
+      if (chipEx) chipEx.textContent = `Exercise: ${ex.toFixed(1)} / 2.5h`;
+
+      const kpiSl = document.getElementById('kpi-sleep');
+      const kpiSlCap = document.getElementById('kpi-sleep-cap');
+      const chipSl = document.getElementById('chip-sleep');
+      const aligned = sl >= 6.0;
+      if (kpiSl) kpiSl.textContent = `${sl.toFixed(1)} h`;
+      if (kpiSlCap) kpiSlCap.textContent = aligned ? `Aligned (vs 5.4h misaligned)` : `Below 6.4h aligned norm`;
+      if (chipSl) chipSl.textContent = aligned ? `Sleep: ${sl.toFixed(1)}h (Aligned)` : `Sleep: ${sl.toFixed(1)}h (Watch)`;
+
+      const habitsList = document.getElementById('home-habits-list');
+      if (habitsList) {
+        const items = [
+          { key: 'exercise', title: `2.5h ARED + Aerobic Countermeasure`, meta: `${ex.toFixed(1)}h logged` },
+          { key: 'blueLight', title: `Morning 480nm Blue-Light Circadian Cue`, meta: `06:30 UTC` },
+          { key: 'biophilic', title: `Biophilic Break / Plant &amp; Earth View`, meta: `20 min` },
+          { key: 'sleep', title: `Protected Sleep Hygiene Window`, meta: `6.4h+ target` }
+        ];
+        habitsList.innerHTML = items.map(it => {
+          const checked = appState.habits[it.key] ? 'checked' : '';
+          return `<label class="habit-item">
+            <span class="habit-left">
+              <input type="checkbox" class="habit-check" ${checked} onchange="toggleHabit('${it.key}', this.checked)">
+              <span>${it.title}</span>
+            </span>
+            <span class="mono-val" style="color:var(--on-surface-variant);">${it.meta}</span>
+          </label>`;
+        }).join('');
+      }
+    }
+
+    function toggleHabit(key, val) {
+      appState.habits[key] = Boolean(val);
+      if (key === 'exercise' && val && appState.exerciseHours < 2.5) {
+        appState.exerciseHours = 2.5;
+        if (appState.dayLogs[14]) appState.dayLogs[14].ex = 2.5;
+      }
+      renderHomeMetrics();
+      renderDayInspector();
+      renderCalendar();
+      persistState();
+    }
+
+    // =========================================================================
+    // CHARTS (Chart.js using Haven CSS tokens)
+    // =========================================================================
+    function getToken(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function renderHomeSleepChart() {
+      const canvas = document.getElementById('homeSleepChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      if (homeSleepChart) homeSleepChart.destroy();
+
+      const sols = [`Sol 136`, `Sol 137`, `Sol 138`, `Sol 139`, `Sol 140`, `Sol 141`, `Sol 142`];
+      const vals = [8, 9, 10, 11, 12, 13, 14].map(d => (appState.dayLogs[d] ? appState.dayLogs[d].sl : 6.4));
+      vals[6] = appState.sleepHours;
+
+      homeSleepChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: sols,
+          datasets: [
+            {
+              label: `Actual Sleep (h)`,
+              data: vals,
+              borderColor: getToken('--data-1'),
+              backgroundColor: getToken('--primary-container'),
+              borderWidth: 2.5,
+              tension: 0.28,
+              pointRadius: 4,
+              pointBackgroundColor: getToken('--data-1')
+            },
+            {
+              label: `Aligned Norm (6.4h)`,
+              data: sols.map(() => 6.4),
+              borderColor: getToken('--data-2'),
+              borderWidth: 1.5,
+              borderDash: [5, 5],
+              pointRadius: 0
+            },
+            {
+              label: `Misaligned Risk (5.4h)`,
+              data: sols.map(() => 5.4),
+              borderColor: getToken('--data-3'),
+              borderWidth: 1.5,
+              borderDash: [3, 4],
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, color: getToken('--on-surface-variant') } }
+          },
+          scales: {
+            y: {
+              min: 4.5,
+              max: 7.8,
+              grid: { color: getToken('--outline-variant') },
+              ticks: { color: getToken('--on-surface-variant') }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: getToken('--on-surface-variant') }
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // BODY & CLINICAL BIOMARKERS
+    // =========================================================================
+    function selectBodyZone(zoneId) {
+      if (!BODY_ZONES[zoneId]) return;
+      appState.selectedZone = zoneId;
+      document.querySelectorAll('.body-hotspot-btn').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.zone === zoneId);
+      });
+      document.querySelectorAll('[data-zone-pill]').forEach(btn => {
+        btn.classList.toggle('is-selected', btn.dataset.zonePill === zoneId);
+      });
+      renderBodyDetails();
+      renderBodyChart();
+      persistState();
+    }
+
+    function renderBodyDetails() {
+      const zone = BODY_ZONES[appState.selectedZone] || BODY_ZONES.brain;
+      const phaseData = zone.phases[appState.missionPhase] || zone.phases.L30plus;
+
+      const protoEl = document.getElementById('zone-protocol-label');
+      const titleEl = document.getElementById('zone-title');
+      const statusEl = document.getElementById('zone-status-tag');
+      const sumEl = document.getElementById('zone-summary');
+      const cmEl = document.getElementById('zone-countermeasure');
+      const metricsEl = document.getElementById('zone-metrics-grid');
+      const chartTitleEl = document.getElementById('zone-chart-title');
+
+      if (protoEl) protoEl.textContent = zone.protocol;
+      if (titleEl) titleEl.innerHTML = zone.title;
+      if (statusEl) {
+        statusEl.textContent = phaseData.status;
+        statusEl.className = phaseData.tagClass;
+      }
+      if (sumEl) sumEl.textContent = zone.summary;
+      if (cmEl) cmEl.innerHTML = zone.countermeasure;
+      if (chartTitleEl) chartTitleEl.textContent = zone.chartTitle;
+
+      if (metricsEl) {
+        metricsEl.innerHTML = phaseData.metrics.map(m => `
+          <div class="biomarker-card">
+            <span class="label">${m.name}</span>
+            <div class="kpi-value" style="font-size:1.35rem;">${m.val}</div>
+            <div class="caption-sage" style="font-size:0.78rem;">${m.note}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderBodyChart() {
+      const canvas = document.getElementById('bodyLongitudinalChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      if (bodyLongitudinalChart) bodyLongitudinalChart.destroy();
+
+      const zone = BODY_ZONES[appState.selectedZone] || BODY_ZONES.brain;
+      const labels = [`Pre-flight`, `In-flight L+30`, `Mid-Mission`, `In-flight L-30`, `Post-flight R+10`];
+      const highlightIdxMap = { preflight: 0, L30plus: 1, L30minus: 3, R10plus: 4 };
+      const activeIdx = highlightIdxMap[appState.missionPhase] ?? 1;
+
+      bodyLongitudinalChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: `Target Range Upper`,
+              data: labels.map(() => zone.rangeMax),
+              borderColor: 'transparent',
+              backgroundColor: 'rgba(95, 124, 99, 0.14)',
+              fill: '+1',
+              pointRadius: 0
+            },
+            {
+              label: `Target Range Lower`,
+              data: labels.map(() => zone.rangeMin),
+              borderColor: getToken('--outline-variant'),
+              borderDash: [4, 4],
+              borderWidth: 1,
+              fill: false,
+              pointRadius: 0
+            },
+            {
+              label: `Measured (${zone.unit})`,
+              data: zone.series,
+              borderColor: getToken('--data-1'),
+              borderWidth: 2.5,
+              tension: 0.25,
+              pointRadius: labels.map((_, i) => i === activeIdx ? 7 : 4),
+              pointBackgroundColor: labels.map((_, i) => i === activeIdx ? getToken('--data-3') : getToken('--data-1'))
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                filter: (item) => item.text.startsWith('Measured') || item.text.startsWith('Target Range Lower'),
+                color: getToken('--on-surface-variant')
+              }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: getToken('--outline-variant') },
+              ticks: { color: getToken('--on-surface-variant') }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: getToken('--on-surface-variant') }
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // ROUTINE & CALENDAR
+    // =========================================================================
+    function setCalendarMode(mode) {
+      appState.calendarMode = mode;
+      const mBtn = document.getElementById('cal-mode-month');
+      const wBtn = document.getElementById('cal-mode-week');
+      const mPanel = document.getElementById('calendar-month-panel');
+      const wPanel = document.getElementById('calendar-week-panel');
+
+      if (mBtn) mBtn.classList.toggle('is-active', mode === 'month');
+      if (wBtn) wBtn.classList.toggle('is-active', mode === 'week');
+      if (mPanel) mPanel.style.display = mode === 'month' ? 'block' : 'none';
+      if (wPanel) wPanel.style.display = mode === 'week' ? 'block' : 'none';
+      persistState();
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-days-grid');
+      if (grid) {
+        // Nov 1, 2026 is a Sunday (index 0) -> 30 days
+        let html = '';
+        for (let day = 1; day <= 30; day++) {
+          const log = appState.dayLogs[day] || { ex: 0, sl: 0, bi: false };
+          const isToday = day === 14;
+          const isSelected = day === appState.selectedDay;
+          const sol = 128 + day;
+          const ev = NOVEMBER_EVENTS[day];
+          html += `<button type="button" class="cal-cell ${isToday ? 'is-today' : ''} ${isSelected ? 'is-selected' : ''}" onclick="selectCalendarDay(${day})">
+            <div style="display:flex; justify-content:space-between; width:100%; align-items:baseline;">
+              <span class="cal-day-num">${day}</span>
+              <span class="cal-sol">S${sol}</span>
+            </div>
+            <div>
+              ${ev ? `<div class="cal-event-pill">${ev}</div>` : ''}
+              <div class="cal-dots">
+                <span class="cal-dot ${log.ex >= 2.5 ? 'done-ex' : ''}" title="Exercise"></span>
+                <span class="cal-dot ${log.sl >= 6.0 ? 'done-sl' : ''}" title="Sleep"></span>
+                <span class="cal-dot ${log.bi ? 'done-bi' : ''}" title="Biophilic Break"></span>
+              </div>
+            </div>
+          </button>`;
+        }
+        grid.innerHTML = html;
+      }
+
+      const weekList = document.getElementById('weekly-schedule-list');
+      if (weekList) {
+        weekList.innerHTML = WEEKLY_CIRCADIAN_BLOCKS.map(b => `
+          <div class="schedule-row">
+            <span class="mono-val">${b.time}</span>
+            <div>
+              <div class="subhead" style="font-size:0.95rem;">${b.title}</div>
+              <div style="font-size:0.82rem; color:var(--on-surface-variant);">${b.detail}</div>
+            </div>
+            <span class="tag ${b.status === 'Active' ? 'tag-sand' : ''}">${b.status}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function selectCalendarDay(day) {
+      appState.selectedDay = day;
+      renderCalendar();
+      renderDayInspector();
+      persistState();
+    }
+
+    function renderDayInspector() {
+      const day = appState.selectedDay || 14;
+      const sol = 128 + day;
+      const log = appState.dayLogs[day] || { ex: 2.0, sl: 6.4, bi: true };
+
+      const heading = document.getElementById('selected-day-heading');
+      const evEl = document.getElementById('selected-day-event');
+      if (heading) heading.innerHTML = `<strong>Nov ${day}, 2026</strong> · Sol ${sol}`;
+      if (evEl) evEl.textContent = NOVEMBER_EVENTS[day]
+        ? `Scheduled: ${NOVEMBER_EVENTS[day]}`
+        : `Routine Sol · Maintain circadian cues &amp; 2.5h exercise`;
+
+      const sEx = document.getElementById('slider-exercise');
+      const iEx = document.getElementById('input-exercise');
+      const sSl = document.getElementById('slider-sleep');
+      const iSl = document.getElementById('input-sleep');
+
+      if (sEx) sEx.value = log.ex;
+      if (iEx) iEx.value = log.ex;
+      if (sSl) sSl.value = log.sl;
+      if (iSl) iSl.value = log.sl;
+
+      const biChk = document.getElementById('day-biophilic-chk');
+      const blChk = document.getElementById('day-bluelight-chk');
+      if (biChk) biChk.checked = Boolean(log.bi);
+      if (blChk) blChk.checked = Boolean(appState.habits.blueLight);
+    }
+
+    // Dual-input dedicated handlers (no snap-back)
+    function syncExerciseFromSlider(val) {
+      const inp = document.getElementById('input-exercise');
+      if (inp) inp.value = val;
+    }
+    function syncExerciseFromNumber(val) {
+      const sld = document.getElementById('slider-exercise');
+      if (sld) sld.value = val;
+    }
+    function syncSleepFromSlider(val) {
+      const inp = document.getElementById('input-sleep');
+      if (inp) inp.value = val;
+    }
+    function syncSleepFromNumber(val) {
+      const sld = document.getElementById('slider-sleep');
+      if (sld) sld.value = val;
+    }
+
+    function saveSelectedDayLog() {
+      const day = appState.selectedDay || 14;
+      const exEl = document.getElementById('input-exercise');
+      const slEl = document.getElementById('input-sleep');
+      const biEl = document.getElementById('day-biophilic-chk');
+
+      const ex = exEl ? Math.min(3, Math.max(0, parseFloat(exEl.value) || 0)) : 2.5;
+      const sl = slEl ? Math.min(9, Math.max(3.5, parseFloat(slEl.value) || 6.4)) : 6.4;
+      const bi = biEl ? Boolean(biEl.checked) : true;
+
+      appState.dayLogs[day] = { ex, sl, bi };
+      if (day === 14) {
+        appState.exerciseHours = ex;
+        appState.sleepHours = sl;
+        appState.habits.exercise = ex >= 2.5;
+        appState.habits.sleep = sl >= 6.0;
+        appState.habits.biophilic = bi;
+      }
+
+      const notice = document.getElementById('day-save-notice');
+      if (notice) notice.textContent = `Saved telemetry for Nov ${day} (Sol ${128 + day}).`;
+
+      renderCalendar();
+      renderHomeMetrics();
+      renderHomeSleepChart();
+      renderRoutineChart();
+      updateExergamePreview();
+      persistState();
+    }
+
+    function renderRoutineChart() {
+      const canvas = document.getElementById('routineTrendChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      if (routineTrendChart) routineTrendChart.destroy();
+
+      const phases = [`Pre-flight`, `In-flight L+30`, `In-flight L-30`, `Post-flight R+10`];
+      const phaseKeys = ['preflight', 'L30plus', 'L30minus', 'R10plus'];
+      const activeIdx = phaseKeys.indexOf(appState.missionPhase);
+
+      routineTrendChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: phases,
+          datasets: [
+            {
+              label: `Exercise Adherence (%)`,
+              data: [96, 88, 92, 84],
+              backgroundColor: phases.map((_, i) => i === activeIdx ? getToken('--data-1') : getToken('--data-context')),
+              borderRadius: 4
+            },
+            {
+              label: `Circadian Sleep Alignment (%)`,
+              data: [92, 78, 85, 95],
+              backgroundColor: phases.map((_, i) => i === activeIdx ? getToken('--data-2') : getToken('--outline-variant')),
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: getToken('--on-surface-variant') } }
+          },
+          scales: {
+            y: {
+              min: 50,
+              max: 100,
+              grid: { color: getToken('--outline-variant') },
+              ticks: { color: getToken('--on-surface-variant') }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: getToken('--on-surface-variant') }
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // CHALLENGES: PVT, F2B & EXERGAMING
+    // =========================================================================
+    function startPvtTest() {
+      clearTimeout(pvtState.timer);
+      pvtState = { status: 'waiting', timer: null, startTs: 0, results: [], trial: 0, maxTrials: 5 };
+      const sumEl = document.getElementById('pvt-summary');
+      if (sumEl) sumEl.textContent = ``;
+      nextPvtTrial();
+    }
+
+    function nextPvtTrial() {
+      if (pvtState.trial >= pvtState.maxTrials) {
+        finishPvtTest();
+        return;
+      }
+      pvtState.trial += 1;
+      pvtState.status = 'waiting';
+      const stage = document.getElementById('pvt-stage');
+      const prompt = document.getElementById('pvt-prompt');
+      const count = document.getElementById('pvt-trial-count');
+      if (stage) {
+        stage.classList.add('is-waiting');
+        stage.classList.remove('is-stimulus');
+      }
+      if (prompt) prompt.textContent = `Hold steady… wait for green cue`;
+      if (count) count.textContent = `Trial ${pvtState.trial} / ${pvtState.maxTrials}`;
+
+      const delay = 1100 + Math.floor(Math.random() * 1900);
+      pvtState.timer = setTimeout(() => {
+        pvtState.status = 'ready';
+        pvtState.startTs = performance.now();
+        if (stage) {
+          stage.classList.remove('is-waiting');
+          stage.classList.add('is-stimulus');
+        }
+        if (prompt) prompt.textContent = `TAP NOW`;
+      }, delay);
+    }
+
+    function handlePvtClick() {
+      const readout = document.getElementById('pvt-readout');
+      if (pvtState.status === 'idle') return;
+      if (pvtState.status === 'waiting') {
+        clearTimeout(pvtState.timer);
+        if (readout) readout.textContent = `False start — wait for cue`;
+        pvtState.trial = Math.max(0, pvtState.trial - 1);
+        setTimeout(nextPvtTrial, 750);
+        return;
+      }
+      if (pvtState.status === 'ready') {
+        const rt = Math.round(performance.now() - pvtState.startTs);
+        pvtState.results.push(rt);
+        if (readout) readout.textContent = `Reaction: ${rt} ms`;
+        pvtState.status = 'between';
+        setTimeout(nextPvtTrial, 650);
+      }
+    }
+
+    function finishPvtTest() {
+      pvtState.status = 'idle';
+      const stage = document.getElementById('pvt-stage');
+      const prompt = document.getElementById('pvt-prompt');
+      const sumEl = document.getElementById('pvt-summary');
+      const bestChip = document.getElementById('challenge-pvt-best');
+
+      if (stage) stage.classList.remove('is-waiting', 'is-stimulus');
+      const avg = Math.round(pvtState.results.reduce((a, b) => a + b, 0) / pvtState.results.length);
+      appState.pvtLastMs = avg;
+      if (avg < appState.pvtBestMs) appState.pvtBestMs = avg;
+
+      if (prompt) prompt.textContent = `Completed · Mean: ${avg} ms`;
+      if (sumEl) sumEl.textContent = avg <= 260
+        ? `Nominal vigilance (${avg} ms vs 264 ms L+30 norm).`
+        : `Mild slowing (${avg} ms). Consider a 20m rest or hydration check.`;
+      if (bestChip) bestChip.textContent = `PVT Best: ${appState.pvtBestMs} ms`;
+      persistState();
+    }
+
+    // F2B Working Memory
+    function startF2bGame() {
+      clearInterval(f2bState.timer);
+      const seq = [];
+      let targets = 0;
+      for (let i = 0; i < 8; i++) {
+        if (i >= 2 && Math.random() < 0.38) {
+          seq.push(seq[i - 2]);
+          targets += 1;
+        } else {
+          const idx = Math.floor(Math.random() * F2B_SHAPES.length);
+          seq.push(F2B_SHAPES[idx]);
+        }
+      }
+      f2bState = { active: true, seq, idx: -1, timer: null, hits: 0, misses: 0, falseAlarms: 0, targets, respondedThisStep: false };
+      const sumEl = document.getElementById('f2b-summary');
+      const matchBtn = document.getElementById('f2b-match-btn');
+      if (sumEl) sumEl.textContent = ``;
+      if (matchBtn) matchBtn.disabled = false;
+
+      advanceF2bStep();
+      f2bState.timer = setInterval(advanceF2bStep, 2200);
+    }
+
+    function advanceF2bStep() {
+      if (f2bState.idx >= 2 && f2bState.seq[f2bState.idx].id === f2bState.seq[f2bState.idx - 2].id && !f2bState.respondedThisStep) {
+        f2bState.misses += 1;
+      }
+      f2bState.idx += 1;
+      f2bState.respondedThisStep = false;
+
+      if (f2bState.idx >= f2bState.seq.length) {
+        finishF2bGame();
+        return;
+      }
+      const item = f2bState.seq[f2bState.idx];
+      const symEl = document.getElementById('f2b-symbol');
+      const stepEl = document.getElementById('f2b-step-label');
+      if (symEl) symEl.innerHTML = item.svg;
+      if (stepEl) stepEl.textContent = `Step ${f2bState.idx + 1} / ${f2bState.seq.length} · ${item.label}`;
+    }
+
+    function submitF2bMatch() {
+      if (!f2bState.active || f2bState.respondedThisStep || f2bState.idx < 0) return;
+      f2bState.respondedThisStep = true;
+      const isMatch = f2bState.idx >= 2 && f2bState.seq[f2bState.idx].id === f2bState.seq[f2bState.idx - 2].id;
+      const sumEl = document.getElementById('f2b-summary');
+      if (isMatch) {
+        f2bState.hits += 1;
+        if (sumEl) sumEl.textContent = `Correct 2-back match.`;
+      } else {
+        f2bState.falseAlarms += 1;
+        if (sumEl) sumEl.textContent = `Not a 2-back match.`;
+      }
+    }
+
+    function finishF2bGame() {
+      clearInterval(f2bState.timer);
+      f2bState.active = false;
+      const matchBtn = document.getElementById('f2b-match-btn');
+      const symEl = document.getElementById('f2b-symbol');
+      const sumEl = document.getElementById('f2b-summary');
+      const bestChip = document.getElementById('challenge-f2b-best');
+
+      if (matchBtn) matchBtn.disabled = true;
+      const totalDecisions = Math.max(1, f2bState.targets + f2bState.falseAlarms);
+      const acc = Math.max(50, Math.min(100, Math.round((f2bState.hits / totalDecisions) * 100)));
+      appState.f2bLastPct = acc;
+      if (acc > appState.f2bBestPct) appState.f2bBestPct = acc;
+
+      if (symEl) symEl.innerHTML = `<span class="subhead">Sequence Complete · ${acc}%</span>`;
+      if (sumEl) sumEl.textContent = `Hits: ${f2bState.hits}/${f2bState.targets} · False alarms: ${f2bState.falseAlarms}.`;
+      if (bestChip) bestChip.textContent = `F2B Accuracy: ${appState.f2bBestPct}%`;
+      persistState();
+    }
+
+    // SG Exergaming Pacer
+    function updateExergamePreview() {
+      const sel = document.getElementById('exergame-mode');
+      const cad = document.getElementById('exergame-cadence');
+      const bar = document.getElementById('exergame-progress-bar');
+      const lbl = document.getElementById('exergame-today-label');
+
+      const map = {
+        row: `76 RPM · SG Partner +1.5% pace`,
+        ared: `Controlled Eccentric · 4s cadence`,
+        t2: `10.2 km/h · Harness 80% BW load`
+      };
+      if (sel && cad) cad.textContent = map[sel.value] || map.row;
+      const pct = Math.min(100, Math.round((appState.exerciseHours / 2.5) * 100));
+      if (bar) bar.style.width = `${pct}%`;
+      if (lbl) lbl.textContent = `Logged today: ${appState.exerciseHours.toFixed(1)}h / 2.5h`;
+    }
+
+    function toggleExergamePacer() {
+      const btn = document.getElementById('exergame-pace-btn');
+      const timerEl = document.getElementById('exergame-session-timer');
+      if (exerTimer) {
+        clearInterval(exerTimer);
+        exerTimer = null;
+        if (btn) btn.textContent = `Resume Live Pacer`;
+        return;
+      }
+      if (btn) btn.textContent = `Pause Pacer`;
+      exerTimer = setInterval(() => {
+        exerSeconds += 1;
+        const m = String(Math.floor(exerSeconds / 60)).padStart(2, '0');
+        const s = String(exerSeconds % 60).padStart(2, '0');
+        if (timerEl) timerEl.textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function logExergameBlock(addH) {
+      appState.exerciseHours = Math.min(3.0, Number((appState.exerciseHours + addH).toFixed(2)));
+      appState.habits.exercise = appState.exerciseHours >= 2.5;
+      if (appState.dayLogs[14]) appState.dayLogs[14].ex = appState.exerciseHours;
+      const notice = document.getElementById('exergame-notice');
+      if (notice) notice.textContent = `Added +${addH}h. Total today: ${appState.exerciseHours.toFixed(1)}h / 2.5h.`;
+      updateExergamePreview();
+      renderHomeMetrics();
+      renderCalendar();
+      persistState();
+    }
+
+    // =========================================================================
+    // QUIET SPACE: WEB AUDIO BIOPHILIC SOUNDSCAPES & PRIVATE JOURNAL
+    // =========================================================================
+    function toggleSoundscape(id) {
+      if (activeSoundId === id) {
+        stopAllAudio();
+        return;
+      }
+      stopAllAudio();
+      startProceduralAudio(id);
+    }
+
+    function startProceduralAudio(id) {
+      const AudioContextCls = window.AudioContext || window.webkitAudioContext;
+      const statusEl = document.getElementById('quiet-audio-status');
+      if (!AudioContextCls) {
+        if (statusEl) statusEl.textContent = `Audio unavailable in browser`;
+        return;
+      }
+      if (!audioCtx) audioCtx = new AudioContextCls();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const volSlider = document.getElementById('sound-volume');
+      const vol = volSlider ? Number(volSlider.value) / 100 : 0.45;
+
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.value = vol * 0.35;
+      masterGain.connect(audioCtx.destination);
+      activeGainNode = masterGain;
+
+      // Generate 3-second looping soft noise buffer
+      const bufferSize = audioCtx.sampleRate * 3;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.997 * b0 + white * 0.029;
+        b1 = 0.985 * b1 + white * 0.032;
+        b2 = 0.950 * b2 + white * 0.048;
+        data[i] = (b0 + b1 + b2) * 0.25;
+      }
+
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+      src.loop = true;
+
+      const filter = audioCtx.createBiquadFilter();
+      if (id === 'rain') {
+        filter.type = 'bandpass';
+        filter.frequency.value = 1100;
+        filter.Q.value = 0.6;
+      } else if (id === 'ocean') {
+        filter.type = 'lowpass';
+        filter.frequency.value = 420;
+        const lfo = audioCtx.createOscillator();
+        const lfoGain = audioCtx.createGain();
+        lfo.frequency.value = 0.12;
+        lfoGain.gain.value = 260;
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+        lfo.start();
+        src.connect(filter);
+        filter.connect(masterGain);
+        src.start();
+        activeStopFn = () => { try { src.stop(); lfo.stop(); } catch (e) {} };
+      } else if (id === 'wind') {
+        filter.type = 'bandpass';
+        filter.frequency.value = 540;
+        filter.Q.value = 1.4;
+      } else {
+        filter.type = 'lowpass';
+        filter.frequency.value = 190;
+      }
+
+      if (id !== 'ocean') {
+        src.connect(filter);
+        filter.connect(masterGain);
+        src.start();
+        activeStopFn = () => { try { src.stop(); } catch (e) {} };
+      }
+
+      activeSoundId = id;
+      document.querySelectorAll('.sound-card').forEach(btn => {
+        btn.classList.toggle('is-playing', btn.dataset.sound === id);
+      });
+      const labelMap = { rain: `Forest Rain`, ocean: `Coastal Surf`, wind: `Alpine Pines`, cabin: `Habitat Hum` };
+      if (statusEl) statusEl.textContent = `Playing: ${labelMap[id] || id}`;
+    }
+
+    function updateSoundVolume(val) {
+      if (activeGainNode) {
+        activeGainNode.gain.value = (Number(val) / 100) * 0.35;
+      }
+    }
+
+    function stopAllAudio() {
+      if (activeStopFn) activeStopFn();
+      activeStopFn = null;
+      activeSoundId = null;
+      document.querySelectorAll('.sound-card').forEach(btn => btn.classList.remove('is-playing'));
+      const statusEl = document.getElementById('quiet-audio-status');
+      if (statusEl) statusEl.textContent = `Audio: Idle`;
+    }
+
+    function toggleQuietBreathing() {
+      const btn = document.getElementById('quiet-breath-btn');
+      const orb = document.getElementById('quiet-breath-orb');
+      const lbl = document.getElementById('quiet-breath-label');
+      const secEl = document.getElementById('quiet-breath-sec');
+
+      if (quietBreathInterval) {
+        clearInterval(quietBreathInterval);
+        quietBreathInterval = null;
+        if (btn) btn.textContent = `Begin Cycle`;
+        if (orb) orb.classList.remove('phase-inhale', 'phase-hold', 'phase-exhale');
+        if (lbl) lbl.textContent = `Ready`;
+        if (secEl) secEl.textContent = `4 · 4 · 6`;
+        return;
+      }
+
+      if (btn) btn.textContent = `Pause Cycle`;
+      let t = 0;
+      const tick = () => {
+        const c = t % 14;
+        if (!orb || !lbl || !secEl) return;
+        orb.classList.remove('phase-inhale', 'phase-hold', 'phase-exhale');
+        if (c < 4) {
+          orb.classList.add('phase-inhale');
+          lbl.textContent = `Inhale`;
+          secEl.textContent = `${4 - c}s`;
+        } else if (c < 8) {
+          orb.classList.add('phase-hold');
+          lbl.textContent = `Hold`;
+          secEl.textContent = `${8 - c}s`;
+        } else {
+          orb.classList.add('phase-exhale');
+          lbl.textContent = `Exhale`;
+          secEl.textContent = `${14 - c}s`;
+        }
+        t += 1;
+      };
+      tick();
+      quietBreathInterval = setInterval(tick, 1000);
+    }
+
+    // Private Micro-Venting Journal
+    function useJournalPrompt(prefix) {
+      const ta = document.getElementById('journal-text');
+      if (!ta) return;
+      ta.value = prefix;
+      ta.focus();
+    }
+
+    function saveJournalEntry() {
+      const moodEl = document.getElementById('journal-mood');
+      const textEl = document.getElementById('journal-text');
+      const notice = document.getElementById('journal-notice');
+      if (!textEl) return;
+      const body = textEl.value.trim();
+      if (!body) {
+        if (notice) notice.textContent = `Write a short reflection before saving.`;
+        return;
+      }
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      appState.journalEntries.unshift({
+        id: Date.now(),
+        sol: `Sol 142 · ${timeStr}`,
+        mood: moodEl ? moodEl.value : `Calm`,
+        text: body
+      });
+      textEl.value = ``;
+      if (notice) notice.textContent = `Saved locally in private workspace.`;
+      renderJournal();
+      persistState();
+    }
+
+    function deleteJournalEntry(id) {
+      appState.journalEntries = appState.journalEntries.filter(e => e.id !== id);
+      renderJournal();
+      persistState();
+    }
+
+    function renderJournal() {
+      const list = document.getElementById('journal-entries-list');
+      const countTag = document.getElementById('journal-count-tag');
+      const entries = appState.journalEntries || [];
+      if (countTag) countTag.textContent = `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`;
+      if (!list) return;
+
+      if (entries.length === 0) {
+        list.innerHTML = `<div class="journal-entry" style="color:var(--on-surface-variant);">
+          No private reflections recorded yet. Choose a prompt above or write freely whenever you need a moment off-channel.
+        </div>`;
+        return;
+      }
+
+      list.innerHTML = entries.map(e => `
+        <div class="journal-entry">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span class="tag">${e.mood}</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="mono-val" style="color:var(--on-surface-variant);">${e.sol}</span>
+              <button type="button" class="btn btn-sm" style="min-height:26px;padding:2px 8px;" onclick="deleteJournalEntry(${e.id})">Remove</button>
+            </div>
+          </div>
+          <p style="margin:0; font-size:0.92rem; color:var(--on-surface);">${e.text.replace(/</g, '&lt;')}</p>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    function renderAll() {
+      renderChatLog();
+      renderHomeMetrics();
+      renderCalendar();
+      renderDayInspector();
+      selectBodyZone(appState.selectedZone || 'brain');
+      setMissionPhase(appState.missionPhase || 'L30plus');
+      setCalendarMode(appState.calendarMode || 'month');
+      updateExergamePreview();
+      renderJournal();
+      switchView(appState.activeView || 'home');
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    async function initApp() {
+      await loadPersistentState();
+      renderAll();
+      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === 'function') {
+        window.notebookAppApi.notifyAppReady();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>

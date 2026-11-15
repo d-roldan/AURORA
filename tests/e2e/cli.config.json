@@ -1,0 +1,1 @@
+{"browser":{"browserName":"chromium","launchOptions":{"headless":true,"args":["--no-sandbox"]},"contextOptions":{"viewport":{"width":1440,"height":1100}}}}

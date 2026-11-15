@@ -1,0 +1,19 @@
+# Especificación de telemetría
+
+Contrato 1: POST `/api/v1/telemetry/ingest`: schemaVersion, batchId, missionId, deviceId, source=SIMULATED, samples (1–1000): metric/value/unit/observedAt/quality. Unidad canónica y scope desde catálogo, valores finitos, tiempo en últimas 24h y ≤5s futuro. Dispositivo debe existir y estar activo, sujeto derivado de su asignación. GOOD/DEGRADED/INVALID/UNKNOWN son estados técnicos, no certeza clínica.
+
+POST `/telemetry/waveforms`: schemaVersion/batchId/missionId/deviceId/source, signal=ecg, channel=lead_demo, unit=a.u., startAt, samplingRateHz=250, samples (250–7500). UTC por índice a 4ms, nunca nanosegundos en Number. No calibración a mV. Señal original intacta.
+
+Influx org aegis: `aegis_vitals` (90d), `aegis_waveforms` (7d), `aegis_features` (90d). Measurements crew_vitals, habitat_environment, crew_ecg, analytics_features. Tags mission_id/subject_id/device_id/source/metric o channel; features además algorithm_version. Fields value, quality y window_seconds derivado. Identidad: measurement + tags + timestamp; no UUID por muestra. Reintentos con mismo punto idempotentes; batchId no es un registro transaccional independiente.
+
+Escalares cada 2s. ECG de los cuatro sujetos; generado en segmentos NeuroKit2 continuos de 600s a 250Hz, semilla `seed + segmentIndex`; enviado en bloques cerrados de 2s. Los segmentos son independientes, no se afirma continuidad fisiológica entre segmentos ni escenarios. Hora UTC real de pared, sin aceleración. Si producción se atrasa >4s, descarta backlog dejando brecha. Reintentos acotados: 0/.5/1/2s, sin cola infinita. Estado ERROR informa fallo de entrega, proceso sigue intentando. Escenario HR: escalares rampan 12s; ECG del segmento se genera directamente a frecuencia objetivo; no se afirma concordancia transitoria exacta.
+
+Lecturas >10s son STALE; UI no las rotula live. Supervisor registra SIGNAL_LOST dentro del próximo ciclo de 15s. Regla experimental solo considera scalars GOOD frescos y monótonos, contexto REST de demo, brechas ≤5s. Fuera de orden no reabre continuidad. Recuperación se registra, no resuelve evento. Hábitat CO₂ ≥1500ppm dispara aviso de demo, deduplicado por dispositivo/día; no umbral clínico.
+
+Historia: hasta 90d, agregado adaptativo por promedio para continuas en rangos >1h (aproximadamente 1200 intervalos por conjunto de tags), máximo 10000 puntos. ECG hasta 30s/7500 puntos. Ventana analítica de últimos 20s, mínimo 15s y separación ≤5ms; excepciones devuelven calidad insuficiente con HR nullable. Features son DERIVED de ECG SIMULATED, con versión de algoritmo. HRV RMSSD/SDNN requiere 75000 muestras contiguas a 250Hz; se procesa con NeuroKit2 y se almacena DERIVED con ventana de 300s. Sin ventana suficiente, N/A. No score de salud. MEASURED/IMPORTED no se admiten aún en ingesta demo. MANUAL es check-in en PostgreSQL; fuentes científicas se documentan separadamente.
+
+
+Ampliación de 38 métricas/11 categorías: METRIC_CATALOG.md define sensores continuos, 17 registros periódicos, ECG y features derivados, unidades y rangos de visualización. El catálogo es persistente y GET /telemetry/catalog resuelve el hábitat compartido. latest incluye features y aplica staleness según cadencia de cada métrica. Polling de superposición integral a 10s, paneles individuales a 2s.
+
+Último registro visible: datos antiguos o inválidos conservan su valor y fecha como evidencia, con estado explícito; no cuentan como lecturas actuales. La presentación operacional usa lastValue cuando value es null, sin alimentar reglas desde el caché. Últimas features se recuperan hasta su retención de 90d y referencia ECG hasta 7d. Las consultas históricas conservan sus límites. Ver UI_CONTINUITY.md.
+
