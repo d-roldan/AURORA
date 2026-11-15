@@ -143,8 +143,6 @@ export class Telemetry implements OnModuleInit {
   return result;
  }
  private async background(){
-  const devices=await this.db.device.findMany({where:{status:'ACTIVE',lastSeenAt:{lt:new Date(Date.now()-10000)}}});
-  for(const d of devices)if(d.lastSeenAt)await this.event(d,'SIGNAL_LOST',`lost:${d.id}:${d.lastSeenAt.toISOString()}`,d.lastSeenAt.toISOString(),{source:'SIMULATED',lastObservedAt:d.lastSeenAt,explanation:'Acquisition stale for >10 seconds. DATA UNAVAILABLE; no health inference.'});
   if(this.analyzing)return;this.analyzing=true;
   try{const crew=await this.db.crewMember.findMany({orderBy:{code:'asc'}});for(const c of crew){try{await this.process(c.id);if(Date.now()-(this.hrvLast.get(c.id)||0)>60000){this.hrvLast.set(c.id,Date.now());await this.processHrv(c.id);}}catch(e:any){console.error('Analytics subject degraded',c.code,e.message);}}}finally{this.analyzing=false;}
  }

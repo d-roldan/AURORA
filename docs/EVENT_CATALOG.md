@@ -1,27 +1,22 @@
-# Catálogo de eventos sintéticos
+# Catálogo de eventos sintéticos de misión
 
-Aurora incluye seis eventos ficticios para recorrer la bitácora, la criticidad, la evidencia y el flujo de revisión humana. Se crean con `apps/backend/prisma/seed-demo-events.cjs`, únicamente cuando `DEMO_MODE=true`. Cada evento tiene una `dedupKey` estable; repetir el cargador no duplica registros.
+Aurora carga siete eventos ficticios orientados a la operación cotidiana de una misión. Se crean con `apps/backend/prisma/seed-demo-events.cjs`, únicamente cuando `DEMO_MODE=true`, y usan claves estables para evitar duplicados.
 
-## Ejemplos incluidos
-
-| Ámbito | Tipo | Criticidad | Estado inicial | Propósito |
+| Ámbito | Tipo | Criticidad | Estado | Ejemplo |
 |---|---|---|---|---|
-| Misión | `MISSION_REVIEW_NOTE` | `INFO` | `RESOLVED` | Mostrar un registro informativo revisado y cerrado |
-| Adquisición | `SIGNAL_LOST` | `TECHNICAL` | `RESOLVED` | Explicar una brecha de sensor sin inferir salud |
-| Hábitat | `ENVIRONMENT_CHANGE` | `YELLOW` | `ACKNOWLEDGED` | Mostrar evidencia ambiental y seguimiento pendiente |
-| Fisiología | `BASELINE_DEVIATION` | `REVIEW` | `OPEN` | Solicitar verificación humana de una desviación ficticia |
-| Operación | `OPERATIONAL_THRESHOLD` | `YELLOW` | `ACKNOWLEDGED` | Mostrar atención operacional sin emergencia |
-| Operación | `OPERATIONAL_THRESHOLD` | `RED` | `OPEN` | Mostrar escalamiento crítico y revisión pendiente |
+| Actividad | `EXERCISE_REMINDER` | `INFO` | `OPEN` | Ventana programada de ejercicio para Elba |
+| Estudio médico | `BLOOD_STUDY_DUE` | `REVIEW` | `ACKNOWLEDGED` | Estudio ficticio de sangre pendiente |
+| Radiación | `HIGH_RADIATION_ALERT` | `RED` | `OPEN` | Umbral sintético alto del monitor externo |
+| EVA | `SUIT_OXYGEN_LOW` | `RED` | `RESOLVED` | Simulación de oxígeno bajo en traje espacial |
+| EVA | `EVA_CHECKLIST_DUE` | `YELLOW` | `ACKNOWLEDGED` | Lista previa a actividad extravehicular |
+| Bienestar | `HYDRATION_REMINDER` | `INFO` | `RESOLVED` | Recordatorio operativo posterior al ejercicio |
+| Descanso | `REST_WINDOW_REMINDER` | `INFO` | `OPEN` | Ventana planificada de descanso y relevo |
 
-Criticidad y estado son conceptos distintos. `INFO`, `TECHNICAL`, `REVIEW`, `YELLOW` y `RED` describen la naturaleza o prioridad. `OPEN`, `ACKNOWLEDGED` y `RESOLVED` representan el flujo humano. Reconocer un evento no lo resuelve.
+El cargador elimina los antiguos eventos `SIGNAL_LOST` de la demostración. La falta de datos continúa visible como estado de adquisición en las lecturas, pero ya no genera eventos en la bitácora del operador. Criticidad (`INFO`, `REVIEW`, `YELLOW`, `RED`) y flujo humano (`OPEN`, `ACKNOWLEDGED`, `RESOLVED`) siguen siendo conceptos separados.
 
-Cada ejemplo conserva fuente `SYNTHETIC_EVENT_CATALOG`, `demoOnly=true`, explicación, métrica o categoría cuando corresponde, timestamp y notas de revisión. Los eventos creados se auditan como `DEMO_EVENT_CREATED`.
+El mismo cargador crea siete entradas cronológicas en la bitácora de Elba Quaife: planificación de jornada, ejercicio, preparación de muestras, chequeo de traje EVA, turno durante alerta de radiación, descanso y observación diaria. Son registros sintéticos e idempotentes identificados por `createdBy=demo-logbook-seed`.
 
-## Límites
-
-El catálogo escribe exclusivamente `HealthEvent` y auditoría. No fabrica telemetría, no activa `OperationalAlertState`, no cambia el escenario del simulador y no ejecuta reglas clínicas. Por eso el evento rojo permite explorar la bitácora, pero no aparece como una condición activa en visor/TV. Para observar el flujo operacional en vivo debe ejecutarse uno de los escenarios de demostración del simulador.
-
-Todos los nombres, valores y notas son ficticios. Ningún evento es un diagnóstico, tratamiento, protocolo médico o indicación de emergencia real.
+Los valores, protocolos, horarios y notas son ficticios. Ningún evento es un diagnóstico, tratamiento o instrucción médica real.
 
 ## Reproducción
 
@@ -29,4 +24,4 @@ Todos los nombres, valores y notas son ficticios. Ningún evento es un diagnóst
 docker compose exec -T aegis-backend node prisma/seed-demo-events.cjs
 ```
 
-Resultado idempotente esperado después de la primera ejecución: `created=0`, `existing=6`.
+La primera ejecución informa siete eventos y siete entradas de Elba; las siguientes actualizan los eventos y conservan la bitácora sin duplicarla.

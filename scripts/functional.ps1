@@ -28,11 +28,12 @@ Call '/simulator/start' @{scenario='NORMAL';seed=2026;subjectId=$target}|Out-Nul
 Start-Sleep -Seconds 6
 $lostStart=[DateTime]::UtcNow
 Call '/simulator/start' @{scenario='SENSOR_LOSS';seed=2026;subjectId=$target}|Out-Null
-Wait-For 'sensor loss staleness and technical event' {
+Wait-For 'sensor loss is shown as stale acquisition state' {
  $latest=@(Call "/telemetry/latest?subjectId=$target"|Where-Object metric -eq 'heart_rate')[0]
- $lost=@(Call '/events'|Where-Object {$_.type -eq 'SIGNAL_LOST' -and $_.crewMemberId -eq $target -and [DateTime]$_.firstObservedAt -gt $lostStart.AddSeconds(-10)})
- $latest.freshness -eq 'STALE' -and $lost.Count -gt 0
+ $latest.freshness -eq 'STALE'
 } 40
+$lost=@(Call '/events'|Where-Object {$_.type -eq 'SIGNAL_LOST' -and $_.crewMemberId -eq $target -and [DateTime]$_.firstObservedAt -gt $lostStart.AddSeconds(-10)})
+if($lost.Count -gt 0){throw 'Signal loss must remain an acquisition state, not a mission event'}
 $habitatStart=[DateTime]::UtcNow
 Call '/simulator/start' @{scenario='HABITAT_CHANGE';seed=2026;subjectId=$target}|Out-Null
 Wait-For 'habitat environment threshold event' {@(Call '/events'|Where-Object type -eq 'ENVIRONMENT_CHANGE').Count -gt 0} 45
