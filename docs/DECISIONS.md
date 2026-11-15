@@ -54,7 +54,7 @@ Se amplía el check-in existente como bitácora de observaciones humanas con tex
 
 Solicitud explícita del usuario: reemplazar puntos/cortes de las gráficas de tripulación por líneas coherentes y cargar los valores sintéticos necesarios. Las tendencias escalares conectan registros mediante segmentos rectos; el ECG conserva huecos reales. Se elimina la regla universal de corte de 90 segundos para tendencias. Para periódicas se elige la última observación de cada intervalo del catálogo, conservando todos los originales en API/CSV. Se amplían consultas a 90 días y se agregan ventanas largas continuas para evitar truncar datos recientes.
 
-El historial de demo se genera con Python y lo valida/escribe NestJS mediante un endpoint ADMIN y demo-only, separado de ingesta en vivo y de reglas. Fuente SIMULATED y perfil aurora-periodic-history-v1 explícitos; sin datos NASA ni señales derivadas retrospectivas. Motivo, límites, reproducción y semántica en LINEAR_TRENDS.md. Esta decisión actualiza la representación de registros periódicos y el límite previo de siete días, no sus unidades, retenciones ni umbrales operativos.
+El historial de demo se genera con Python y lo valida/escribe NestJS mediante un endpoint ADMIN y demo-only, separado de ingesta en vivo y de reglas. Fuente SIMULATED y perfil vigente `aurora-coherent-history-v2` explícitos; instantáneas continuas a seis horas y cadencias periódicas originales para tripulación/hábitat, sin datos NASA, ECG ni señales derivadas retrospectivas. Motivo, límites, reproducción y semántica en LINEAR_TRENDS.md. Esta decisión actualiza la representación histórica, no sus unidades, retenciones ni umbrales operativos.
 
 
 ## Retratos y navegación lateral · 15/11/2026

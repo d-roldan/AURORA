@@ -17,7 +17,7 @@ function fixture(){
  const telemetry=Object.create(Telemetry.prototype);const writes=[],audits=[];
  telemetry.db={metricDefinition:{findMany:async()=>[{key:'bone_density',scope:'CREW',cadence:'PERIODIC',sourceKind:'SIMULATED',unit:'g/cm²',displayMin:.5,displayMax:1.8}]},auditLog:{create:async input=>audits.push(input)}};
  telemetry.device=async()=>({id:'device',missionId:'mission',crewMemberId:'crew'});
- telemetry.history=async()=>[];telemetry.write=async(bucket,points)=>writes.push({bucket,points});
+ telemetry.rows=async()=>[];telemetry.write=async(bucket,points)=>writes.push({bucket,points});
  telemetry.operational={ingest:()=>assert.fail('History must not evaluate current alert rules')};
  return {telemetry,writes,audits};
 }
@@ -34,11 +34,11 @@ test('history import preserves original points, deduplicates retries, and audits
  const old=process.env.DEMO_MODE;process.env.DEMO_MODE='true';
  try{
   const {telemetry,writes,audits}=fixture();const stored=sample(),fresh={...sample(),observedAt:new Date(Date.now()-60*86400000).toISOString()};
-  telemetry.history=async()=>[{time:stored.observedAt,value:1.1}];
+  telemetry.rows=async()=>[{_time:stored.observedAt}];
   const input={batchId:'fixture',samples:[stored,fresh,fresh]};
   const first=await telemetry.importDemoHistory(input,'admin');assert.equal(first.accepted,1);assert.equal(first.skipped,2);assert.equal(writes[0].points.length,1);assert.equal(audits.length,1);
   assert.match(writes[0].points[0].toLineProtocol(),/source=SIMULATED/);
-  telemetry.history=async()=>[stored,fresh].map(s=>({time:s.observedAt,value:s.value}));
+  telemetry.rows=async()=>[stored,fresh].map(s=>({_time:s.observedAt}));
   assert.equal((await telemetry.importDemoHistory(input,'admin')).accepted,0);assert.equal(writes.length,1);assert.equal(audits.length,1);
  }finally{if(old===undefined)delete process.env.DEMO_MODE;else process.env.DEMO_MODE=old;}
 });

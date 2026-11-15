@@ -10,5 +10,21 @@ Volúmenes nombrados y red aegis_default aislada. Reiniciar: `docker compose res
 
 Salud: `docker compose ps`; logs `docker compose logs --tail 100`; `/api/v1/system/health` autorizado prueba dependencias. Analytics caída no invalida muestras crudas. Productor STOPPED no significa contenedor caído. Al iniciar API, autostart crea NORMAL con semilla42 solo si el productor está detenido y todavía no tiene runId; una detención manual permanece respetada; si ya está activo conserva su ejecución. Históricos y revisiones sobreviven. La continuidad de eventos se reinicia conservadoramente, no se reconstruye aún desde histórico.
 
+## Publicación por Cloudflare Tunnel
+
+Publicación autorizada el 15/11/2026 en `https://aurora.drait.com.ar`. El hostname usa el túnel existente `drait-web`; Cloudflare termina TLS y reenvía HTTP por una red Docker privada al único ingreso de Aurora, `aegis-nginx:8080`. PostgreSQL, InfluxDB, analytics, simulator y backend no se publican directamente.
+
+La configuración persistente del conector se conserva en `/home/david/web-drait/cloudflared-config.yml`. El servicio `cloudflared` se une a la red Docker externa `aegis_ingress`, declarada en `/home/david/web-drait/docker-compose.prod.yml`. La ruta DNS es un CNAME administrado por Cloudflare Tunnel para `aurora.drait.com.ar`.
+
+Comprobaciones operativas:
+
+```bash
+cloudflared tunnel info drait-web
+docker compose ps
+curl -fsS https://aurora.drait.com.ar/api/v1/system/live
+```
+
+El acceso es público y no tiene una política Cloudflare Access delante. Solo se autoriza la demo con identidades ficticias y datos sintéticos; no cargar datos personales o médicos reales. La sesión y los roles de aplicación siguen siendo la frontera de autorización para acciones. TLS público no convierte el prototipo en un dispositivo médico, ni sustituye gestión de secretos, backups verificados, monitoreo o endurecimiento antes de un uso distinto de la demostración.
+
 Autonomía: imágenes ya construidas y volúmenes bastan para runtime. Servicios de aplicación y datos en red Compose interna (`internal: true`) sin salida a Internet. Solo Nginx pertenece además a la red de ingreso para publicar localhost; el build usa su propia red de construcción. UI sin CDN, fuentes remotas ni llamadas cloud. Único puerto publicado por Nginx en loopback. El alcance de la prueba está en VALIDATION.md; no equivale a certificación de operación espacial. No dominio ni publicación externa configurados. Solo datos sintéticos; TLS/identidad corporativa/gestión avanzada de secretos son requisitos previos a uso remoto real.
 

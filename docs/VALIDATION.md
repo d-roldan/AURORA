@@ -198,4 +198,39 @@ PDCA: ocultar accesos Simulador y Sistema del listado compartido de navegación.
 ## Entrega V0.1.1 · 15/11/2026
 
 Compose válido. Construidas las cuatro imágenes 0.1.1 (frontend, backend, analytics y simulator); TypeScript/Vite y backend compilan. Pruebas ejecutadas: node --test de gráficos/retención/sesión: 10 aprobadas; npm test en aegis-backend:0.1.1 sin red: 10 aprobadas; pytest en aegis-analytics:0.1.1 sin red: 5 aprobadas, 16 advertencias de deprecación. Persisten advertencias de bundle grande. Sin nuevas migraciones. El recorrido E2E crew-navigation completo no se reejecutó. Notas consolidadas en releases/V0.1.1.md. Publicación en main y release autorizadas expresamente por el usuario; no se despliega un sitio público ni se publican imágenes Docker.
+## Publicación Cloudflare · 15/11/2026
+
+- Configuración local del túnel validada con `cloudflared tunnel ingress validate`: correcta.
+- La red Docker `aegis_ingress` permitió alcanzar `http://aegis-nginx:8080/api/v1/system/live`: HTTP 200.
+- Cloudflare creó el CNAME de `aurora.drait.com.ar` hacia el túnel `drait-web`. Los resolvers públicos `1.1.1.1` y `8.8.8.8` devolvieron las direcciones anycast de Cloudflare.
+- Verificación HTTPS por el edge de Cloudflare: `/`, `/api/v1/system/live`, `/api/docs` y `/settings` respondieron HTTP 200; la validación TLS fue correcta. Liveness devolvió `{"status":"UP","version":"0.1.0"}`.
+- Comprobación de regresión: `https://drait.com.ar/` continuó respondiendo HTTP 200 después de recrear únicamente el conector `cloudflared`.
+
+La caché del resolvedor local conservó temporalmente la respuesta negativa previa a crear el registro; por eso la primera consulta normal desde el host no resolvió aunque los resolvers públicos ya mostraban el registro. La prueba HTTPS final fijó una dirección anycast obtenida desde `1.1.1.1`, manteniendo hostname y SNI públicos. No se ejecutó una prueba desde una red física externa ni se configuró Cloudflare Access. La publicación contiene exclusivamente la demo sintética existente; no es validación médica ni autorización para datos reales.
+
+## Retratos e historial coherente v2 · 15/11/2026
+
+Se corrigió la ausencia de retratos observada en la instalación vigente. La causa fue una asociación frontend con UUID de una base anterior; los cuatro perfiles actuales conservaban los códigos `CREW-01`…`CREW-04` pero tenían UUID nuevos. `CrewPortrait` ahora asocia por código estable de seed y agrega versión a la URL para invalidar cachés. El build público contiene los cuatro códigos y las cuatro imágenes respondieron HTTP 200 `image/png` en `https://aurora.drait.com.ar`.
+
+Modelo `aurora-coherent-history-v2`: 47.020 muestras SIMULATED aceptadas, cero omitidas y cero errores, distribuidas en 322 lotes para cuatro tripulantes y un hábitat. Se cubrieron 51 métricas escalares por tripulante y cinco ambientales; las continuas usan instantáneas cada seis horas durante 89 días y las periódicas conservan cadencia de catálogo. ECG, ECG-HR y HRV no se generaron retrospectivamente. Un intento de ejecutar el script PowerShell no escribió datos porque `pwsh` no está instalado; se ejecutó el mismo flujo con Bash, curl y jq contra NestJS.
+
+Validación observada:
+
+- Python `test_history_demo.py`: 3/3 aprobadas; determinismo, consistencia de sueño, cadencia mensual, ciclos actividad/pulso/respiración/metabolismo, dosis acumulada y límites ambientales.
+- Backend en imagen sin red: 10/10 pruebas aprobadas, incluidas validación total previa a escritura y deduplicación por timestamp crudo.
+- Builds de backend y frontend aprobados. Persiste la advertencia conocida de bundle frontend mayor de 500 kB.
+- CREW-01: 352 puntos v2 de pulso en la consulta de 89 días; actividad entre 0,77 y 1,9924 MET. Dosis histórica de 1,0029 a 3,1966 mSv, monótona hacia el presente.
+- Sueño: 85 registros v2, 7,2997–7,9948 h. Hábitat: 352 puntos v2 de CO₂, 602,0001–781,2013 ppm.
+- Reimportar un punto exacto de la grilla devolvió `accepted=0`, `skipped=1`. Una comprobación inicial usó por error el timestamp de una ventana agregada de la API, que no era una identidad cruda existente, y añadió un único punto sintético válido; no sustituyó lecturas actuales ni activó reglas.
+- Los siete servicios de ejecución terminaron saludables; la versión pública sirvió el nuevo asset frontend y los cuatro PNG.
+
+Estos patrones son decisiones de una demostración ficticia, no reconstrucción de sensores, evidencia médica ni modelo fisiológico validado. Las líneas entre instantáneas no representan muestras intermedias. No se generaron EVA ni eventos solares históricos.
+
+## Catálogo demostrativo de eventos · 15/11/2026
+
+Se crearon seis `HealthEvent` sintéticos idempotentes mediante Prisma: `INFO/RESOLVED`, `TECHNICAL/RESOLVED`, `YELLOW/ACKNOWLEDGED` ambiental, `REVIEW/OPEN` fisiológico, `YELLOW/ACKNOWLEDGED` operacional y `RED/OPEN` operacional. Resultado inicial: `created=6`, `existing=0`; segunda ejecución: `created=0`, `existing=6`. Cada creación produjo un `AuditLog` `DEMO_EVENT_CREATED`; se observaron seis auditorías.
+
+La API devolvió exactamente dos eventos OPEN, dos ACKNOWLEDGED y dos RESOLVED con fuente `SYNTHETIC_EVENT_CATALOG`. El frontend compila insignias separadas de severidad y estado, borde de criticidad y traducciones españolas de tipos, explicaciones y notas. El asset público `index-DQfCBQ5g.js` y su CSS contenían las nuevas marcas; `https://aurora.drait.com.ar` respondió correctamente. Backend: 10/10 pruebas aprobadas. Los siete servicios quedaron saludables.
+
+El catálogo no inserta muestras ni estados de alerta operacional; por diseño, el evento RED de bitácora no altera visor/TV. Sirve para explorar evidencia y transiciones humanas sin iniciar escenarios. Alcance y reproducción en `EVENT_CATALOG.md`. Todos los eventos son ficticios y no constituyen evaluación clínica.
 

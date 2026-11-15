@@ -25,3 +25,6 @@
 @media(min-width:761px) and (max-width:1200px){.sidebar[data-collapsed="false"]{--sidebar-width:190px}}
 
 @media(max-width:760px){.topbar-mission{gap:8px}.topbar{gap:8px}.top-status{flex:none}}
+
+/* Event severity is separate from OPEN/ACKNOWLEDGED/RESOLVED workflow state. */
+.event-detail{border-left-width:4px}.event-detail--red{border-left-color:#e45264}.event-detail--yellow,.event-detail--review{border-left-color:var(--amber)}.event-detail--technical{border-left-color:#7d96ad}.event-detail--info{border-left-color:var(--accent)}.event-badges{display:flex;align-items:center;gap:12px}.event-severity{font-size:7px;letter-spacing:.8px;font-weight:700;padding:4px 7px;border:1px solid currentColor;border-radius:4px}.event-severity--red{color:#f06b75}.event-severity--yellow,.event-severity--review{color:var(--amber)}.event-severity--technical{color:#93a7bd}.event-severity--info{color:var(--accent)}

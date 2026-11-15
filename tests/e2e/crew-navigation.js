@@ -29,12 +29,12 @@ async (page)=>{
  await page.locator('.sidebar-toggle').click();
  await page.screenshot({path:'output/playwright/crew-profile-collapsed.png',fullPage:true});
  // Only the browser loses one portrait; no data or services change.
- const block=route=>route.abort('failed');await page.route('**/images/crew/crew-01.png',block);
+ const block=route=>route.abort('failed');await page.route('**/images/crew/crew-01.png*',block);
  await page.goto('http://localhost:8085/crew');
  await page.locator('.profile .crew-portrait-fallback').waitFor();
  check(await page.locator('.profile .crew-portrait-fallback').count()===1,'Unavailable portrait falls back to identified initials without substituting another person');
  check(await page.locator('.profile').first().locator('h2').textContent()==='Lucas Orozco','Image failure preserves the astronaut name');
- await page.unroute('**/images/crew/crew-01.png',block);await page.reload();
+ await page.unroute('**/images/crew/crew-01.png*',block);await page.reload();
  await page.waitForFunction(()=>[...document.querySelectorAll('.profile .crew-portrait img')].length===4&&[...document.querySelectorAll('.profile .crew-portrait img')].every(img=>img.complete&&img.naturalWidth>0));
  await page.setViewportSize({width:390,height:844});
  if(await sidebar.getAttribute('data-collapsed')==='true')await page.locator('.sidebar-toggle').click();

@@ -11,21 +11,31 @@ $auth=Invoke-RestMethod "$base/auth/login" -Method Post -ContentType application
 $headers=@{Authorization="Bearer $($auth.token)"}
 $crew=Invoke-RestMethod "$base/crew" -Headers $headers
 $devices=Invoke-RestMethod "$base/devices" -Headers $headers
-$end=[DateTime]::UtcNow;$from=$end.AddDays(-89).ToString('o');$to=$end.ToString('o')
+$end=[DateTime]::UtcNow
 $subjects=@()
+$habitatCatalog=$null
 foreach($person in $crew){
- Write-Host "Preparing periodic history: $($person.code)"
+ Write-Host "Preparing coherent history: $($person.code)"
  $device=$devices|Where-Object {$_.crewMemberId -eq $person.id -and $_.status -eq 'ACTIVE'}|Select-Object -First 1
  if(-not $device){continue}
  $catalog=Invoke-RestMethod "$base/telemetry/catalog?subjectId=$($person.id)" -Headers $headers
+ if(-not $habitatCatalog){$habitatCatalog=$catalog}
  $metrics=@()
- foreach($m in $catalog|Where-Object {$_.cadence -eq 'PERIODIC' -and $_.sourceKind -eq 'SIMULATED'}){
-  $history=Invoke-RestMethod "$base/telemetry/history?subjectId=$($person.id)&metric=$($m.key)&from=$from&to=$to" -Headers $headers
-  $anchor=$history|Where-Object {$_.algorithmVersion -ne 'aurora-periodic-history-v1'}|Select-Object -First 1
-  if(-not $anchor){continue}
-  $metrics+=@{key=$m.key;unit=$m.unit;cadence=$m.cadence;sourceKind=$m.sourceKind;expectedIntervalMs=$m.expectedIntervalMs;displayMin=$m.displayMin;displayMax=$m.displayMax;anchor=@{time=$anchor.time;value=$anchor.value}}
+ foreach($m in $catalog|Where-Object {$_.subjectId -eq $person.id -and $_.cadence -in @('CONTINUOUS','PERIODIC') -and $_.sourceKind -eq 'SIMULATED'}){
+  if(-not $m.latest){continue}
+  $metrics+=@{key=$m.key;unit=$m.unit;cadence=$m.cadence;sourceKind=$m.sourceKind;expectedIntervalMs=$m.expectedIntervalMs;displayMin=$m.displayMin;displayMax=$m.displayMax;anchor=@{time=$m.latest.observedAt;value=$m.latest.value}}
  }
- $subjects+=@{deviceId=$device.id;missionId=$device.missionId;metrics=$metrics}
+ $subjects+=@{deviceId=$device.id;missionId=$device.missionId;scope='CREW';metrics=$metrics}
+}
+$habitatDevice=$devices|Where-Object {$_.habitatId -and $_.status -eq 'ACTIVE'}|Select-Object -First 1
+if($habitatDevice -and $habitatCatalog){
+ Write-Host "Preparing coherent history: $($habitatDevice.code)"
+ $metrics=@()
+ foreach($m in $habitatCatalog|Where-Object {$_.subjectId -eq $habitatDevice.habitatId -and $_.cadence -eq 'CONTINUOUS' -and $_.sourceKind -eq 'SIMULATED'}){
+  if(-not $m.latest){continue}
+  $metrics+=@{key=$m.key;unit=$m.unit;cadence=$m.cadence;sourceKind=$m.sourceKind;expectedIntervalMs=$m.expectedIntervalMs;displayMin=$m.displayMin;displayMax=$m.displayMax;anchor=@{time=$m.latest.observedAt;value=$m.latest.value}}
+ }
+ $subjects+=@{deviceId=$habitatDevice.id;missionId=$habitatDevice.missionId;scope='HABITAT';metrics=$metrics}
 }
 New-Item -ItemType Directory output/validation -Force|Out-Null
 @{asOf=$end.ToString('o');subjects=$subjects}|ConvertTo-Json -Depth 12|Set-Content output/validation/history-context.json
@@ -41,6 +51,6 @@ foreach($batch in $batches){
  $result=Invoke-RestMethod "$base/simulator/history" -Method Post -Headers $headers -ContentType application/json -Body ($batch|ConvertTo-Json -Depth 8 -Compress)
  $accepted+=$result.accepted;$skipped+=$result.skipped
 }
-$summary=@{model='aurora-periodic-history-v1';source='SIMULATED';subjects=$subjects.Count;batches=@($batches).Count;accepted=$accepted;skipped=$skipped;checkedAt=[DateTime]::UtcNow.ToString('o')}
+$summary=@{model='aurora-coherent-history-v2';source='SIMULATED';subjects=$subjects.Count;batches=@($batches).Count;accepted=$accepted;skipped=$skipped;checkedAt=[DateTime]::UtcNow.ToString('o')}
 $summary|ConvertTo-Json|Set-Content output/validation/history-import.json
 $summary|ConvertTo-Json

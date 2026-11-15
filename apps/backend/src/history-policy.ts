@@ -1,5 +1,5 @@
 export const HISTORY_RETENTION_MS=90*86400000;
-export const HISTORY_MODEL='aurora-periodic-history-v1';
+export const HISTORY_MODEL='aurora-coherent-history-v2';
 export function historyAggregation(span:number){
  return span>3600000?Math.max(1,Math.ceil(span/1200/60000)):null;
 }

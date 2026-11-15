@@ -89,20 +89,24 @@ export class Telemetry implements OnModuleInit {
  async importDemoHistory(body:IngestDto,actor:string){
   if(process.env.DEMO_MODE!=='true')throw new ForbiddenException('Demo disabled');
   const d=await this.device(body.deviceId,body.missionId);
-  if(!d.crewMemberId)throw new BadRequestException('Periodic history requires a crew device');
+  if(!d.crewMemberId&&!d.habitatId)throw new BadRequestException('History requires a crew or habitat device');
   const defs=await this.db.metricDefinition.findMany();const now=Date.now();
   for(const s of body.samples){
    const m=defs.find(m=>m.key===s.metric),t=Date.parse(s.observedAt);
-   if(!m||m.scope!=='CREW'||m.cadence!=='PERIODIC'||m.sourceKind!=='SIMULATED'||m.unit!==s.unit||s.quality!=='GOOD'||s.value<m.displayMin||s.value>m.displayMax)
-    throw new BadRequestException('Demo history requires periodic simulated metrics in canonical units and display bounds');
+   const scope=d.crewMemberId?'CREW':'HABITAT';
+   if(!m||m.scope!==scope||!['CONTINUOUS','PERIODIC'].includes(m.cadence)||m.sourceKind!=='SIMULATED'||m.unit!==s.unit||s.quality!=='GOOD'||s.value<m.displayMin||s.value>m.displayMax)
+    throw new BadRequestException('Demo history requires scalar simulated metrics in canonical units, matching scope and display bounds');
    if(!Number.isFinite(t)||t<now-HISTORY_RETENTION_MS||t>now-86400000)
     throw new BadRequestException('Demo history timestamps must be between 1 and 90 days old');
   }
   const existing=new Set<string>();
+  const subjectId=(d.crewMemberId||d.habitatId)!;
   for(const key of new Set(body.samples.map(s=>s.metric))){
    const times=body.samples.filter(s=>s.metric===key).map(s=>Date.parse(s.observedAt));
-   const rows=await this.history(d.crewMemberId,key,new Date(Math.min(...times)).toISOString(),new Date(Math.max(...times)+1).toISOString());
-   for(const r of rows)existing.add(key+':'+Date.parse(r.time));
+   // Read raw timestamps here: the public history endpoint aggregates long
+   // continuous ranges and therefore cannot be used for exact idempotency.
+   const rows=await this.rows(`from(bucket:"aegis_vitals") |> range(start:time(v:${quote(new Date(Math.min(...times)).toISOString())}),stop:time(v:${quote(new Date(Math.max(...times)+1).toISOString())})) |> filter(fn:(r)=>r.subject_id==${quote(subjectId)} and r.metric==${quote(key)} and r._field=="value") |> keep(columns:["_time"])`);
+   for(const r of rows)existing.add(key+':'+Date.parse(r._time));
   }
   const seen=new Set<string>();const missing=body.samples.filter(s=>{const key=s.metric+':'+Date.parse(s.observedAt);if(existing.has(key)||seen.has(key))return false;seen.add(key);return true;});
   const points=missing.map(s=>this.point(d,'crew_vitals','SIMULATED',Date.parse(s.observedAt)).tag('metric',s.metric).tag('algorithm_version',HISTORY_MODEL).floatField('value',s.value).stringField('quality','GOOD'));

@@ -1,8 +1,10 @@
 async page=>{
  const checks=[];const check=(ok,label)=>{if(!ok)throw new Error(label);checks.push(label);};
  await page.setViewportSize({width:1440,height:1000});
- await page.goto('http://localhost:8085/crew/20cd85e5-cb29-4f46-8fb1-e2c0fac227da');
+ await page.goto('http://localhost:8085/crew');
+ await page.locator('.profile').filter({hasText:'Lucas Orozco'}).click();
  await page.getByRole('heading',{name:'Welcome back, Lucas Orozco'}).waitFor();
+ const subjectId=await page.locator('.personal-header .crew-portrait').getAttribute('data-crew-id');
  const nav=page.getByRole('navigation',{name:'Personal workspace navigation'});
  await page.waitForFunction(()=>Number(document.querySelector('.personal-trend [role="img"]')?.getAttribute('aria-label')?.match(/([\d,]+) persisted/)?.[1]?.replaceAll(',',''))>2);
  await page.locator('.personal-trend').screenshot({path:'output/playwright/linear-sleep.png'});
@@ -13,10 +15,10 @@ async page=>{
  await page.locator('.personal-trend').getByRole('heading',{name:'Bone mineral density'}).waitFor();
  const auth=await page.request.post('http://localhost:8085/api/v1/auth/demo');const session=await auth.json();
  const end=new Date(),start=new Date(end.getTime()-90*86400000);
- const response=await page.request.get(`http://localhost:8085/api/v1/telemetry/history?subjectId=20cd85e5-cb29-4f46-8fb1-e2c0fac227da&metric=bone_density&from=${start.toISOString()}&to=${end.toISOString()}`,{headers:{Authorization:`Bearer ${session.token}`}});
+ const response=await page.request.get(`http://localhost:8085/api/v1/telemetry/history?subjectId=${subjectId}&metric=bone_density&from=${start.toISOString()}&to=${end.toISOString()}`,{headers:{Authorization:`Bearer ${session.token}`}});
  const points=await response.json();
  check(points.length>=3,'Monthly bone trend has at least three stored observations');
- check(points.some(p=>p.algorithmVersion==='aurora-periodic-history-v1'),'Historical demonstration readings have explicit model provenance');
+ check(points.some(p=>p.algorithmVersion==='aurora-coherent-history-v2'),'Historical demonstration readings have explicit model provenance');
  const caption=await page.locator('.personal-trend .personal-kicker').textContent();
  check(caption.includes('90'),'Monthly query uses ninety days rather than an empty seven-day plot');
  const card=await page.locator('.personal-domain-metrics [data-metric="bone_density"] strong').textContent();

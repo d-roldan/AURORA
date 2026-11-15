@@ -50,6 +50,8 @@ docker compose exec -T aegis-analytics python -m pytest -q
 
 Ver [resultados observados](docs/VALIDATION.md), [despliegue](docs/DEPLOYMENT.md), [arquitectura](docs/ARCHITECTURE.md) y [limitaciones](docs/ROADMAP.md). El código original no tiene licencia asignada hasta confirmación del titular. Referencias iniciales preservadas íntegramente en raíz y `docs/source/`.
 
+La vista Events incluye un [catálogo de seis eventos sintéticos](docs/EVENT_CATALOG.md) con criticidades informativa, técnica, revisión, amarilla y roja, y ejemplos abiertos, reconocidos y resueltos. Este catálogo demuestra la bitácora; no activa condiciones operativas ni genera telemetría.
+
 ## Vista operativa por entorno
 Abrir Crew → perfil → Spacecraft, Space station, Rover o Lunar / planetary base. La vista completa conserva SpO₂, HR/HRV y radiación, y adapta tres espacios al entorno. Escape/Exit focus vuelve al perfil. Alertas amarillas destacan; una roja secundaria reemplaza el espacio 5 con verificación humana. Son reglas sintéticas experimentales, sin diagnóstico ni tratamiento. Ver docs/OPERATIONAL_MODES.md. Prueba: ./scripts/operational.ps1.
 

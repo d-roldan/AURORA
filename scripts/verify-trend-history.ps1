@@ -18,7 +18,7 @@ foreach($person in $people){
  foreach($key in @('sleep_duration','bone_density','bone_p1np','reaction_time')){
   $m=$catalog|Where-Object {$_.key -eq $key}
   $points=Invoke-RestMethod "$base/telemetry/history?subjectId=$($person.id)&metric=$key&from=$($start.ToString('o'))&to=$($end.ToString('o'))" -Headers $headers
-  $fixture=@($points|Where-Object {$_.algorithmVersion -eq 'aurora-periodic-history-v1'})
+  $fixture=@($points|Where-Object {$_.algorithmVersion -eq 'aurora-coherent-history-v2'})
   if($points.Count -lt 3 -or $fixture.Count -lt 2){throw "Insufficient history: $($person.code)/$key"}
   $last=$points[-1]
   if($last.time -ne $m.latest.observedAt -or [Math]::Abs($last.value-$m.latest.value) -gt 0.000001){throw "Last chart observation does not match the card: $key"}
